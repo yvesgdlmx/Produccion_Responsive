@@ -11,6 +11,13 @@ import Biselado_Procesos from '../components/procesos/Biselado_Procesos';
 import Produccion_Procesos from '../components/procesos/Produccion_Procesos';
 
 const Procesos = () => {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      window.location.reload();
+    }, 300000); // Actualiza cada 5 minutos
+    return () => clearInterval(interval);
+  }, []);
+
   const [ultimaActualizacion, setUltimaActualizacion] = useState('');
 
   useEffect(() => {

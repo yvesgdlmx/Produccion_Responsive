@@ -85,7 +85,7 @@ const Desbloqueo_Procesos = () => {
 
         const horasMatutino = 8; // 8 horas para el turno matutino
         const horasVespertino = 7; // 7 horas para el turno vespertino
-        const horasNocturno = 8; // 8 horas para el turno nocturno
+        const horasNocturno = 9; // 8 horas para el turno nocturno
         setMetaMatutino(horasMatutino * sumaMetas);
         setMetaVespertino(horasVespertino * sumaMetas);
         setMetaNocturno(horasNocturno * sumaMetas);

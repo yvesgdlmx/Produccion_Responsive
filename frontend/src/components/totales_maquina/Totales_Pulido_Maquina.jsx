@@ -145,7 +145,7 @@ const Totales_Pulido_Maquina = () => {
 
   const metaMatutinoFinal = sumaTotalMetas * 8;
   const metaVespertinoFinal = sumaTotalMetas * 7;
-  const metaNocturnoFinal = sumaTotalMetas * 4;
+  const metaNocturnoFinal = sumaTotalMetas * 9;
 
   const sumaHitsPorHora = horasUnicas.map(hora => {
     const [horaInicio, horaFin] = hora.split(' - ');

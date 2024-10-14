@@ -6,16 +6,22 @@ const Tableros_Terminado = () => {
   const componentes = ['TotalesTerminado', 'TotalesBiselado'];
   const [componenteActivo, setComponenteActivo] = useState(componentes[0]);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [contador, setContador] = useState(10);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setComponenteActivo(prev => {
-        const currentIndex = componentes.indexOf(prev);
-        const nextIndex = (currentIndex + 1) % componentes.length;
-        return componentes[nextIndex];
+      setContador(prev => {
+        if (prev === 1) {
+          setComponenteActivo(prevComp => {
+            const currentIndex = componentes.indexOf(prevComp);
+            const nextIndex = (currentIndex + 1) % componentes.length;
+            return componentes[nextIndex];
+          });
+          return 10;
+        }
+        return prev - 1;
       });
-    }, 10000); // Cambia cada 30 segundos
-
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -23,9 +29,7 @@ const Tableros_Terminado = () => {
     const handleFullScreenChange = () => {
       setIsFullScreen(document.fullscreenElement !== null);
     };
-
     document.addEventListener('fullscreenchange', handleFullScreenChange);
-
     return () => {
       document.removeEventListener('fullscreenchange', handleFullScreenChange);
     };
@@ -50,7 +54,9 @@ const Tableros_Terminado = () => {
 
   return (
     <div>
-      <button className='bg-blue-500 text-white font-bold uppercase p-2 rounded-md mb-6 hover:bg-blue-600 transition duration-300 ease-in-out' onClick={togglePantallaCompleta}>Pantalla Completa</button>
+      <button className='bg-blue-500 text-white font-bold uppercase p-2 rounded-md mb-6 hover:bg-blue-600 transition duration-300 ease-in-out' onClick={togglePantallaCompleta}>
+        Pantalla Completa
+      </button>
       <div
         id="componente-activo"
         style={{
@@ -59,8 +65,25 @@ const Tableros_Terminado = () => {
           alignItems: isFullScreen ? 'center' : 'initial',
           height: isFullScreen ? '100vh' : 'auto',
           width: isFullScreen ? '100%' : 'auto',
+          position: 'relative',
         }}
       >
+        {isFullScreen && (
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            background: 'rgba(255, 255, 255, 0.8)',
+            color: 'black',
+            padding: '10px 15px',
+            borderRadius: '10px',
+            fontSize: '25px',
+            fontWeight: 'bold',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+          }}>
+            Cambio en: {contador}s
+          </div>
+        )}
         {componenteActivo === 'TotalesTerminado' && <Totales_Terminado_Tableros/>}
         {componenteActivo === 'TotalesBiselado' && <Totales_Biselado_Tableros />}
       </div>

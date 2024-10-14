@@ -36,7 +36,9 @@ const Totales_Biselado_Maquina = () => {
     "309 EDGER 10",
     "310 EDGER 11",
     "311 EDFGER 12",
-    "312 RAZR"
+    "312 RAZR",
+    "318 HSE 1",
+    "319 HSE 2"
   ];
 
   useEffect(() => {
@@ -147,7 +149,7 @@ const Totales_Biselado_Maquina = () => {
 
   const metaMatutinoFinal = sumaTotalMetas * 8;
   const metaVespertinoFinal = sumaTotalMetas * 7;
-  const metaNocturnoFinal = sumaTotalMetas * 4;
+  const metaNocturnoFinal = sumaTotalMetas * 9;
 
   const sumaHitsPorHora = horasUnicas.map(hora => {
     const [horaInicio, horaFin] = hora.split(' - ');

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Totales_Surtido_Estacion from "../../components/totales_estacion/Totales_Surtido_Estacion";
 import Totales_Tallado_Estacion from "../../components/totales_estacion/Totales_Tallado_Estacion";
 import Totales_Generado_Estacion from "../../components/totales_estacion/Totales_Generado_Estacion";
@@ -10,6 +11,13 @@ import Totales_Desbloqueo_Estacion from "../../components/totales_estacion/Total
 import Totales_Produccion_Estacion from "../../components/totales_estacion/Totales_Produccion_Estacion";
 
 const Totales_Estacion = () => {
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+          window.location.reload();
+        }, 300000); // Actualiza cada 5 minutos
+        return () => clearInterval(interval);
+      }, []);
 
     return (
         <>

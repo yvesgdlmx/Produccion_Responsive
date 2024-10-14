@@ -4,6 +4,13 @@ import Navegacion from "../others/Navegacion";
 import moment from 'moment-timezone';
 
 const Totales_Desbloqueo_Maquina = () => {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      window.location.reload();
+    }, 300000); // Actualiza cada 5 minutos
+    return () => clearInterval(interval);
+  }, []);
+  
   const [registros, setRegistros] = useState([]);
   const [horasUnicas, setHorasUnicas] = useState([]);
   const [meta, setMeta] = useState(0);

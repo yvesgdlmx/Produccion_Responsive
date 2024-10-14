@@ -20,6 +20,11 @@ const Totales_Tallado_Maquina = () => {
     vespertino: 0,
     nocturno: 0
   });
+  const [metasPorTurno, setMetasPorTurno] = useState({
+    matutino: 0,
+    vespertino: 0,
+    nocturno: 0
+  });
 
   const ordenCelulas = [
     "220 SRFBLK 1",
@@ -47,18 +52,15 @@ const Totales_Tallado_Maquina = () => {
         const responseRegistros = await clienteAxios('/tallado/tallado/actualdia');
         const dataRegistros = responseRegistros.data.registros || [];
 
-        // Calcular el inicio y fin del período deseado
         const ahora = moment().tz('America/Mexico_City');
         let inicioHoy = moment().tz('America/Mexico_City').startOf('day').add(6, 'hours').add(30, 'minutes');
         let finHoy = moment(inicioHoy).add(1, 'days');
 
-        // Si es antes de las 06:30, ajustamos al día anterior
         if (ahora.isBefore(inicioHoy)) {
           inicioHoy.subtract(1, 'days');
           finHoy.subtract(1, 'days');
         }
 
-        // Filtrar registros en el intervalo de tiempo deseado
         const registrosFiltrados = dataRegistros.filter(registro => {
           const fechaHoraRegistro = moment.tz(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss', 'America/Mexico_City');
           return fechaHoraRegistro.isBetween(inicioHoy, finHoy, null, '[]');
@@ -77,7 +79,6 @@ const Totales_Tallado_Maquina = () => {
 
         const horas = new Set();
         const acumulados = {};
-
         registrosFiltrados.forEach(registro => {
           horas.add(registro.hour);
           const celula = registro.name.split("-")[0].trim().toUpperCase().replace(/\s+/g, ' ');
@@ -102,11 +103,11 @@ const Totales_Tallado_Maquina = () => {
         setHorasUnicas(horasConFormato);
         setTotalesAcumulados(acumulados);
         calcularTotalesPorTurno(registrosFiltrados, inicioHoy);
+        calcularMetasPorTurno(Object.values(metas).reduce((a, b) => a + b, 0));
       } catch (error) {
         console.error("Error al cargar los datos:", error);
       }
     };
-
     cargarDatos();
   }, []);
 
@@ -120,15 +121,23 @@ const Totales_Tallado_Maquina = () => {
     registros.forEach(registro => {
       const fechaHoraRegistro = moment.tz(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss', 'America/Mexico_City');
       if (fechaHoraRegistro.isBetween(inicioHoy, moment(inicioHoy).add(8, 'hours'), null, '[)')) {
-        totales.matutino += registro.hits;
+        totales.matutino += parseInt(registro.hits || 0);
       } else if (fechaHoraRegistro.isBetween(moment(inicioHoy).add(8, 'hours'), moment(inicioHoy).add(15, 'hours'), null, '[)')) {
-        totales.vespertino += registro.hits;
+        totales.vespertino += parseInt(registro.hits || 0);
       } else {
-        totales.nocturno += registro.hits;
+        totales.nocturno += parseInt(registro.hits || 0);
       }
     });
 
     setTotalesPorTurno(totales);
+  };
+
+  const calcularMetasPorTurno = (metaPorHora) => {
+    setMetasPorTurno({
+      matutino: 8 * metaPorHora,
+      vespertino: 7 * metaPorHora,
+      nocturno: 9 * metaPorHora
+    });
   };
 
   const sumaTotalAcumulados = Object.values(totalesAcumulados).reduce((acc, curr) => acc + curr, 0);
@@ -136,19 +145,13 @@ const Totales_Tallado_Maquina = () => {
     return acc + (metasPorMaquina[celula] || 0);
   }, 0);
 
-  const metaMatutinoFinal = sumaTotalMetas * 8;
-  const metaVespertinoFinal = sumaTotalMetas * 7;
-  const metaNocturnoFinal = sumaTotalMetas * 4;
-
   const sumaHitsPorHora = horasUnicas.map(hora => {
     const [horaInicio, horaFin] = hora.split(' - ');
     return Object.values(registrosAgrupados).flat().filter(r => {
       const hourMoment = moment(r.hour, 'HH:mm:ss');
       const startMoment = moment(horaInicio, 'HH:mm');
       const endMoment = moment(horaFin, 'HH:mm');
-      
       if (startMoment.isAfter(endMoment)) {
-        // Caso especial para el intervalo que cruza la medianoche
         return hourMoment.isSameOrAfter(startMoment) || hourMoment.isBefore(endMoment);
       } else {
         return hourMoment.isSameOrAfter(startMoment) && hourMoment.isBefore(endMoment);
@@ -156,7 +159,7 @@ const Totales_Tallado_Maquina = () => {
     }).reduce((acc, curr) => acc + parseInt(curr.hits || 0), 0);
   });
 
-  const claseSumaTotalAcumulados = sumaTotalAcumulados >= (metaMatutinoFinal + metaVespertinoFinal + metaNocturnoFinal) ? "text-green-500" : "text-red-500";
+  const claseSumaTotalAcumulados = sumaTotalAcumulados >= (metasPorTurno.matutino + metasPorTurno.vespertino + metasPorTurno.nocturno) ? "text-green-500" : "text-red-500";
 
   const getClassName = (hits, metaPorTurno) => {
     return hits >= metaPorTurno ? "text-green-500" : "text-red-500";
@@ -195,9 +198,7 @@ const Totales_Tallado_Maquina = () => {
                       const hourMoment = moment(r.hour, 'HH:mm:ss');
                       const startMoment = moment(horaInicio, 'HH:mm');
                       const endMoment = moment(horaFin, 'HH:mm');
-                      
                       if (startMoment.isAfter(endMoment)) {
-                        // Caso especial para el intervalo que cruza la medianoche
                         return hourMoment.isSameOrAfter(startMoment) || hourMoment.isBefore(endMoment);
                       } else {
                         return hourMoment.isSameOrAfter(startMoment) && hourMoment.isBefore(endMoment);
@@ -250,9 +251,7 @@ const Totales_Tallado_Maquina = () => {
                         const hourMoment = moment(r.hour, 'HH:mm:ss');
                         const startMoment = moment(horaInicio, 'HH:mm');
                         const endMoment = moment(horaFin, 'HH:mm');
-                        
                         if (startMoment.isAfter(endMoment)) {
-                          // Caso especial para el intervalo que cruza la medianoche
                           return hourMoment.isSameOrAfter(startMoment) || hourMoment.isBefore(endMoment);
                         } else {
                           return hourMoment.isSameOrAfter(startMoment) && hourMoment.isBefore(endMoment);
@@ -285,13 +284,19 @@ const Totales_Tallado_Maquina = () => {
         {/* Totales por turno */}
         <div className='flex flex-col md:flex-row justify-around mt-4 font-semibold mb-4'>
           <div className="bg-white p-2 px-10 rounded-lg mb-2 md:mb-0">
-            <p className="text-gray-700 text-sm md:text-base">Total Matutino: <span className={getClassName(totalesPorTurno.matutino, metaMatutinoFinal)}>{totalesPorTurno.matutino}</span></p>
+            <p className="text-gray-700 text-sm md:text-base">
+              Total Matutino: <span className={getClassName(totalesPorTurno.matutino, metasPorTurno.matutino)}>{totalesPorTurno.matutino}</span>
+            </p>
           </div>
           <div className="bg-white p-2 px-10 rounded-lg mb-2 md:mb-0">
-            <p className="text-gray-700 text-sm md:text-base">Total Vespertino: <span className={getClassName(totalesPorTurno.vespertino, metaVespertinoFinal)}>{totalesPorTurno.vespertino}</span></p>
+            <p className="text-gray-700 text-sm md:text-base">
+              Total Vespertino: <span className={getClassName(totalesPorTurno.vespertino, metasPorTurno.vespertino)}>{totalesPorTurno.vespertino}</span>
+            </p>
           </div>
           <div className="bg-white p-2 px-10 rounded-lg">
-            <p className="text-gray-700 text-sm md:text-base">Total Nocturno: <span className={getClassName(totalesPorTurno.nocturno, metaNocturnoFinal)}>{totalesPorTurno.nocturno}</span></p>
+            <p className="text-gray-700 text-sm md:text-base">
+              Total Nocturno: <span className={getClassName(totalesPorTurno.nocturno, metasPorTurno.nocturno)}>{totalesPorTurno.nocturno}</span>
+            </p>
           </div>
         </div>
       </div>

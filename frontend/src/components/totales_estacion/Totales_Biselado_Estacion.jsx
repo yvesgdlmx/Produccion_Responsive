@@ -14,54 +14,45 @@ const Totales_Biselado_Estacion = () => {
         vespertino: 0,
         nocturno: 0
     });
+    const [metasPorTurno, setMetasPorTurno] = useState({
+        matutino: 0,
+        vespertino: 0,
+        nocturno: 0
+    });
 
     useEffect(() => {
-        const obtenerMeta = async () => {
-            const { data } = await clienteAxios(`/metas/metas-biselados`);
-            const sumaMetas = data.registros.reduce((acc, registro) => acc + registro.meta, 0);
-            setMeta(sumaMetas);
-        };
-        obtenerMeta();
-    }, []);
+        const obtenerDatos = async () => {
+            try {
+                const responseMetas = await clienteAxios('/metas/metas-biselados');
+                const sumaMetas = responseMetas.data.registros.reduce((acc, curr) => acc + curr.meta, 0);
+                setMeta(sumaMetas);
 
-    useEffect(() => {
-        const obtenerRegistros = async () => {
-            const { data } = await clienteAxios(`/biselado/biselado/actualdia`);
-            const registros = data.registros;
-            
-            const ahora = moment();
-            let inicioHoy = moment().startOf('day').add(6, 'hours').add(30, 'minutes');
-            let finHoy = moment(inicioHoy).add(1, 'days');
+                const responseRegistros = await clienteAxios('/biselado/biselado/actualdia');
+                const registros = responseRegistros.data.registros;
 
-            if (ahora.isBefore(inicioHoy)) {
-                inicioHoy.subtract(1, 'days');
-                finHoy.subtract(1, 'days');
+                const ahora = moment();
+                let inicioHoy = moment().startOf('day').add(6, 'hours').add(30, 'minutes');
+                let finHoy = moment(inicioHoy).add(1, 'days');
+
+                if (ahora.isBefore(inicioHoy)) {
+                    inicioHoy.subtract(1, 'days');
+                    finHoy.subtract(1, 'days');
+                }
+
+                const registrosFiltrados = registros.filter(registro => {
+                    const fechaHoraRegistro = moment(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss');
+                    return fechaHoraRegistro.isBetween(inicioHoy, finHoy, null, '[)');
+                });
+
+                setRegistros(registrosFiltrados);
+                calcularTotalesPorTurno(registrosFiltrados, inicioHoy);
+                calcularMetasPorTurno(sumaMetas);
+            } catch (error) {
+                console.error("Error al obtener los datos:", error);
             }
-
-            const registrosFiltrados = registros.filter(registro => {
-                const fechaHoraRegistro = moment(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss');
-                return fechaHoraRegistro.isBetween(inicioHoy, finHoy, null, '[)');
-            });
-
-            setRegistros(registrosFiltrados);
-            calcularTotalesPorTurno(registrosFiltrados, inicioHoy);
         };
-        obtenerRegistros();
+        obtenerDatos();
     }, []);
-
-    const agruparHitsPorHora = () => {
-        const hitsPorHora = {};
-        registros.forEach((registro) => {
-            const fechaHoraRegistro = moment(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss');
-            const horaFormateada = fechaHoraRegistro.format('HH:mm');
-            if (hitsPorHora[horaFormateada]) {
-                hitsPorHora[horaFormateada] += registro.hits;
-            } else {
-                hitsPorHora[horaFormateada] = registro.hits;
-            }
-        });
-        return hitsPorHora;
-    };
 
     const calcularTotalesPorTurno = (registros, inicioHoy) => {
         const totales = {
@@ -82,19 +73,26 @@ const Totales_Biselado_Estacion = () => {
         setTotalesPorTurno(totales);
     };
 
-    const obtenerHoraActual = () => {
-        return moment().format('HH:mm');
+    const calcularMetasPorTurno = (metaPorHora) => {
+        setMetasPorTurno({
+            matutino: 8 * metaPorHora,
+            vespertino: 7 * metaPorHora,
+            nocturno: 9 * metaPorHora
+        });
     };
 
-    const ajustarMetaPorTurno = (horaInicio, horaActual, metaPorHora) => {
-        const inicioTurno = moment(horaInicio, 'HH:mm');
-        const actual = moment(horaActual, 'HH:mm');
-        if (actual.isBefore(inicioTurno)) {
-            actual.add(1, 'day');
-        }
-        const duracion = moment.duration(actual.diff(inicioTurno));
-        const horasTranscurridas = Math.max(1, Math.ceil(duracion.asHours()));
-        return horasTranscurridas * metaPorHora;
+    const agruparHitsPorHora = () => {
+        const hitsPorHora = {};
+        registros.forEach((registro) => {
+            const fechaHoraRegistro = moment(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss');
+            const horaFormateada = fechaHoraRegistro.format('HH:mm');
+            if (hitsPorHora[horaFormateada]) {
+                hitsPorHora[horaFormateada] += registro.hits;
+            } else {
+                hitsPorHora[horaFormateada] = registro.hits;
+            }
+        });
+        return hitsPorHora;
     };
 
     const hitsPorHora = agruparHitsPorHora();
@@ -105,12 +103,8 @@ const Totales_Biselado_Estacion = () => {
         if (momentB.isBefore(moment('06:30', 'HH:mm'))) momentB.add(1, 'day');
         return momentB.diff(momentA);
     });
-    const filaGenerados = horasOrdenadas.map((hora) => hitsPorHora[hora]);
 
-    const horaActual = obtenerHoraActual();
-    const metaMatutinoFinal = ajustarMetaPorTurno("06:30", horaActual, meta);
-    const metaVespertinoFinal = ajustarMetaPorTurno("14:30", horaActual, meta);
-    const metaNocturnoFinal = ajustarMetaPorTurno("22:30", horaActual, meta);
+    const filaGenerados = horasOrdenadas.map((hora) => hitsPorHora[hora]);
 
     const calcularRangoHoras = (horaInicio) => {
         const horaInicioFormateada = formatearHora(horaInicio).slice(0, 5);
@@ -124,7 +118,6 @@ const Totales_Biselado_Estacion = () => {
 
     return (
         <div className="max-w-screen-xl rounded-lg">
-            {/* Estructura para pantallas grandes */}
             <div className="hidden lg:block">
                 <table className="min-w-full bg-white border">
                     <thead>
@@ -156,7 +149,6 @@ const Totales_Biselado_Estacion = () => {
                     </tbody>
                 </table>
             </div>
-            {/* Diseño tipo card para pantallas pequeñas y medianas */}
             <div className="block lg:hidden mt-4">
                 <div className="bg-white shadow-md rounded-lg mb-4 p-6">
                     <div className="flex justify-between border-b pb-2">
@@ -190,13 +182,13 @@ const Totales_Biselado_Estacion = () => {
             </div>
             <div className='flex flex-col md:flex-row justify-around mt-4 font-semibold mb-4'>
                 <div className="bg-white p-2 px-10 rounded-lg mb-2 md:mb-0">
-                    <p className="text-gray-700">Total Matutino: <span className={getClassName(totalesPorTurno.matutino, metaMatutinoFinal)}>{totalesPorTurno.matutino}</span></p>
+                    <p className="text-gray-700">Total Matutino: <span className={getClassName(totalesPorTurno.matutino, metasPorTurno.matutino)}>{totalesPorTurno.matutino}</span></p>
                 </div>
                 <div className="bg-white p-2 px-10 rounded-lg mb-2 md:mb-0">
-                    <p className="text-gray-700">Total Vespertino: <span className={getClassName(totalesPorTurno.vespertino, metaVespertinoFinal)}>{totalesPorTurno.vespertino}</span></p>
+                    <p className="text-gray-700">Total Vespertino: <span className={getClassName(totalesPorTurno.vespertino, metasPorTurno.vespertino)}>{totalesPorTurno.vespertino}</span></p>
                 </div>
                 <div className="bg-white p-2 px-10 rounded-lg">
-                    <p className="text-gray-700">Total Nocturno: <span className={getClassName(totalesPorTurno.nocturno, metaNocturnoFinal)}>{totalesPorTurno.nocturno}</span></p>
+                    <p className="text-gray-700">Total Nocturno: <span className={getClassName(totalesPorTurno.nocturno, metasPorTurno.nocturno)}>{totalesPorTurno.nocturno}</span></p>
                 </div>
             </div>
             <div className="border-b-4 lg:border-b-0"></div>

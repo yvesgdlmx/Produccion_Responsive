@@ -1,4 +1,6 @@
 import { Sequelize } from "sequelize";
+import { Op } from 'sequelize';
+import moment from 'moment-timezone';
 import BloqueoDeTallado from "../models/BloqueoDeTallado.js";
 import Generadores from "../models/Generadores.js";
 import Pulido from "../models/Pulido.js";
@@ -240,45 +242,39 @@ const obtenerRegistros = async (req, res) => {
 
 const obtenerRegistrosTurnos = async (req, res) => {
     const { anio, mes, dia } = req.params;
-
     try {
         const registros = [];
+        
+        // Crear fechas de inicio y fin del rango
+        const fechaInicio = moment.tz(`${anio}-${mes}-${dia} 00:00:00`, 'America/Mexico_City');
+        const fechaFin = moment(fechaInicio).add(2, 'days').startOf('day');
 
         // Obtener registros de todos los modelos
         for (const Modelo of modelos) {
             const registrosModelo = await Modelo.findAll({
                 where: {
-                    [Sequelize.Op.and]: [
-                        {
-                            fecha: {
-                                [Sequelize.Op.and]: [
-                                    Sequelize.where(Sequelize.fn('YEAR', Sequelize.col('fecha')), anio),
-                                    Sequelize.where(Sequelize.fn('MONTH', Sequelize.col('fecha')), mes),
-                                    Sequelize.where(Sequelize.fn('DAY', Sequelize.col('fecha')), dia),
-                                ]
-                            }
-                        }
-                    ]
+                    fecha: {
+                        [Op.gte]: fechaInicio.toDate(),
+                        [Op.lt]: fechaFin.toDate()
+                    }
                 }
             });
 
             // Formatear la fecha de cada registro y extraer el nombre adecuadamente
             const registrosFormateados = registrosModelo.map((registro) => {
-                // Dividir el nombre por el guion y tomar la primera parte
                 const nombreParts = registro.name.split('-');
                 const nombre = nombreParts.length > 1 ? nombreParts[0].trim() : registro.name;
                 return {
                     ...registro.toJSON(),
-                    fecha: registro.fecha.toLocaleString('es-MX', { timeZone: 'America/Mexico_City' }),
+                    fecha: moment(registro.fecha).tz('America/Mexico_City').format('YYYY-MM-DD HH:mm:ss'),
                     name: nombre
                 };
             });
-
             registros.push(...registrosFormateados);
         }
-
         res.json({ registros });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Error al obtener los registros' });
     }
 };
