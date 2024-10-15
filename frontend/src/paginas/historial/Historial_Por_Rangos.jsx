@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import clienteAxios from "../../../config/clienteAxios";
+import moment from "moment";
 
 const estaciones = {
   "Surtido": ["19 LENS LOG"],
@@ -15,63 +16,55 @@ const estaciones = {
 };
 
 const Historial_Por_Rangos = () => {
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const [anio, setAnio] = useState(yesterday.getFullYear().toString());
-  const [mes, setMes] = useState((yesterday.getMonth() + 1).toString().padStart(2, '0'));
-  const [diaInicio, setDiaInicio] = useState(yesterday.getDate().toString());
-  const [diaFin, setDiaFin] = useState(yesterday.getDate().toString());
+  const hoy = moment();
+  const ayer = moment(hoy).subtract(1, 'days');
+  const [anio, setAnio] = useState(ayer.format('YYYY'));
+  const [mes, setMes] = useState(ayer.format('MM'));
+  const [diaInicio, setDiaInicio] = useState(ayer.format('DD'));
+  const [diaFin, setDiaFin] = useState(ayer.format('DD'));
   const [registros, setRegistros] = useState([]);
 
-  const handleAnioChange = (e) => {
-    setAnio(e.target.value);
-  };
-
-  const handleMesChange = (e) => {
-    setMes(e.target.value);
-  };
-
-  const handleDiaInicioChange = (e) => {
-    setDiaInicio(e.target.value);
-  };
-
-  const handleDiaFinChange = (e) => {
-    setDiaFin(e.target.value);
-  };
+  const handleAnioChange = (e) => setAnio(e.target.value);
+  const handleMesChange = (e) => setMes(e.target.value);
+  const handleDiaInicioChange = (e) => setDiaInicio(e.target.value);
+  const handleDiaFinChange = (e) => setDiaFin(e.target.value);
 
   useEffect(() => {
     const obtenerRegistros = async () => {
       try {
-        const { data } = await clienteAxios(`/historial/historial-3/${anio}/${mes}/${diaInicio}/${diaFin}`);
-        console.log("Datos obtenidos de la API:", data);
-        setRegistros(data.registros || []);
+        const fechaInicio = moment(`${anio}-${mes}-${diaInicio} 06:30`);
+        const fechaFin = moment(`${anio}-${mes}-${diaFin} 06:30`).add(1, 'days');
+
+        const { data } = await clienteAxios(`/historial/historial-3/${anio}/${mes}/${diaInicio}/${moment(fechaFin).format('DD')}`);
+
+        const registrosFiltrados = data.registros.filter(registro => {
+          const fechaHora = moment(`${registro.fecha} ${registro.hour}`);
+          return fechaHora.isSameOrAfter(fechaInicio) && fechaHora.isBefore(fechaFin);
+        });
+
+        console.log("Datos filtrados:", registrosFiltrados);
+        setRegistros(registrosFiltrados);
       } catch (error) {
         console.error("Error al obtener los registros:", error);
         setRegistros([]);
       }
     };
+
     obtenerRegistros();
   }, [anio, mes, diaInicio, diaFin]);
 
-  const registrosFiltrados = registros.filter(({ hour }) => {
-    const [hora, minuto] = hour.split(':').map(Number);
-    const horaEnMinutos = hora * 60 + minuto;
-    return horaEnMinutos >= 390 && horaEnMinutos <= 1380;
-  });
-
-  const registrosAgrupados = registrosFiltrados.reduce((acc, registro) => {
+  const registrosAgrupados = registros.reduce((acc, registro) => {
     const { name, hits, hour } = registro;
     if (!acc[name]) {
       acc[name] = { hits: 0, turnos: { matutino: 0, vespertino: 0, nocturno: 0 } };
     }
     acc[name].hits += hits;
-    const [hora, minuto] = hour.split(':').map(Number);
-    if ((hora > 6 || (hora === 6 && minuto >= 30)) && (hora < 14 || (hora === 14 && minuto < 30))) {
+    const hora = moment(hour, 'HH:mm');
+    if (hora.isBetween(moment('06:30', 'HH:mm'), moment('14:29', 'HH:mm'), null, '[]')) {
       acc[name].turnos.matutino += hits;
-    } else if ((hora > 14 || (hora === 14 && minuto >= 30)) && (hora < 21 || (hora === 21 && minuto < 30))) {
+    } else if (hora.isBetween(moment('14:30', 'HH:mm'), moment('21:29', 'HH:mm'), null, '[]')) {
       acc[name].turnos.vespertino += hits;
-    } else if ((hora > 19 || (hora === 19 && minuto >= 30)) || (hora < 2 || (hora === 1 && minuto < 30))) {
+    } else {
       acc[name].turnos.nocturno += hits;
     }
     return acc;
@@ -100,16 +93,24 @@ const Historial_Por_Rangos = () => {
   const totalHits = Object.values(registrosAgrupados).reduce((acc, { hits }) => acc + hits, 0);
 
   const renderizarTablasPorEstacion = () => {
+    const fechaInicio = moment(`${anio}-${mes}-${diaInicio} 06:30`);
+    const fechaFin = moment(`${anio}-${mes}-${diaFin} 06:30`).add(1, 'days');
+    const rangoFecha = `${fechaInicio.format('YYYY-MM-DD HH:mm')} - ${fechaFin.format('YYYY-MM-DD HH:mm')}`;
+  
     return Object.entries(estaciones).map(([nombreEstacion, maquinas]) => {
       const registrosEstacion = maquinas.map((maquina) => registrosAgrupados[maquina]).filter(Boolean);
       if (registrosEstacion.length === 0) return null;
+  
+      // Calculamos el total de hits para esta estación
+      const totalHitsEstacion = registrosEstacion.reduce((total, registro) => total + registro.hits, 0);
+  
       return (
         <div key={nombreEstacion} className="mb-8">
           <table className="min-w-full bg-white border border-gray-300 shadow-lg rounded-lg">
             <thead className="bg-blue-500 text-white">
               <tr>
                 <th className="py-2 px-4 border-b text-center font-medium w-1/3">Nombre</th>
-                <th className="py-2 px-4 border-b text-center font-medium w-1/3">Fecha</th>
+                <th className="py-2 px-4 border-b text-center font-medium w-1/3">Rango de Fecha</th>
                 <th className="py-2 px-4 border-b text-center font-medium w-1/3">Hits</th>
               </tr>
             </thead>
@@ -119,11 +120,16 @@ const Historial_Por_Rangos = () => {
                 return (
                   <tr key={index} className="bg-white even:bg-gray-100">
                     <td className="py-2 px-4 border-b text-center w-1/3">{maquina}</td>
-                    <td className="py-2 px-4 border-b text-center w-1/3">{`${anio}-${mes}-${diaInicio} al ${diaFin}`}</td>
+                    <td className="py-2 px-4 border-b text-center w-1/3">{rangoFecha}</td>
                     <td className="py-2 px-4 border-b text-center w-1/3">{registro.hits}</td>
                   </tr>
                 );
               })}
+              {/* Agregamos la fila de total */}
+              <tr className="bg-gray-200">
+                <td className="py-2 px-4 border-b text-center w-1/3" colSpan="2">Total</td>
+                <td className="py-2 px-4 border-b text-center w-1/3 text-blue-700 font-bold">{totalHitsEstacion}</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -157,25 +163,18 @@ const Historial_Por_Rangos = () => {
         <div>
           <label className="block mb-1 sm:mb-2 text-gray-600">Mes</label>
           <select className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg" value={mes} onChange={handleMesChange}>
-            <option value="01">Enero</option>
-            <option value="02">Febrero</option>
-            <option value="03">Marzo</option>
-            <option value="04">Abril</option>
-            <option value="05">Mayo</option>
-            <option value="06">Junio</option>
-            <option value="07">Julio</option>
-            <option value="08">Agosto</option>
-            <option value="09">Septiembre</option>
-            <option value="10">Octubre</option>
-            <option value="11">Noviembre</option>
-            <option value="12">Diciembre</option>
+            {[...Array(12).keys()].map((m) => (
+              <option key={m + 1} value={(m + 1).toString().padStart(2, '0')}>
+                {moment().month(m).format('MMMM')}
+              </option>
+            ))}
           </select>
         </div>
         <div>
           <label className="block mb-1 sm:mb-2 text-gray-600">Día Inicio</label>
           <select className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg" value={diaInicio} onChange={handleDiaInicioChange}>
             {[...Array(31).keys()].map((day) => (
-              <option key={day + 1} value={day + 1}>{day + 1}</option>
+              <option key={day + 1} value={(day + 1).toString().padStart(2, '0')}>{day + 1}</option>
             ))}
           </select>
         </div>
@@ -183,7 +182,7 @@ const Historial_Por_Rangos = () => {
           <label className="block mb-1 sm:mb-2 text-gray-600">Día Fin</label>
           <select className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg" value={diaFin} onChange={handleDiaFinChange}>
             {[...Array(31).keys()].map((day) => (
-              <option key={day + 1} value={day + 1}>{day + 1}</option>
+              <option key={day + 1} value={(day + 1).toString().padStart(2, '0')}>{day + 1}</option>
             ))}
           </select>
         </div>

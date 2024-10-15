@@ -247,7 +247,7 @@ const obtenerRegistrosTurnos = async (req, res) => {
         
         // Crear fechas de inicio y fin del rango
         const fechaInicio = moment.tz(`${anio}-${mes}-${dia} 00:00:00`, 'America/Mexico_City');
-        const fechaFin = moment(fechaInicio).add(2, 'days').startOf('day');
+        const fechaFin = moment(fechaInicio).add(1, 'days').startOf('day');
 
         // Obtener registros de todos los modelos
         for (const Modelo of modelos) {

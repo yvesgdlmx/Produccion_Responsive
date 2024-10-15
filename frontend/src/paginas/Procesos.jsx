@@ -24,16 +24,18 @@ const Procesos = () => {
     const actualizarHora = () => {
       const ahora = new Date();
       const minutos = ahora.getMinutes();
-      const minutosRedondeados = Math.floor(minutos / 15) * 15;
+      const minutosRedondeados = Math.floor(minutos / 15) * 15 + 5;
       ahora.setMinutes(minutosRedondeados, 0, 0);
-
       const horaFormateada = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       setUltimaActualizacion(horaFormateada);
     };
-
+  
     actualizarHora();
-    const intervalo = setInterval(actualizarHora, 15 * 60 * 1000); // Actualiza cada 15 minutos
-
+    const intervalo = setInterval(() => {
+      actualizarHora();
+      window.location.reload();
+    }, 15 * 60 * 1000); // Actualiza cada 15 minutos
+  
     return () => clearInterval(intervalo);
   }, []);
 

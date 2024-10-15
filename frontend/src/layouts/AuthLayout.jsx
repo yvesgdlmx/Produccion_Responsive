@@ -7,7 +7,7 @@ const AuthLayout = () => {
         <>
        <main className="min-h-screen min-w-full bg-gradient-to-r from-blue-500 to-blue-300 flex flex-col md:p-10 xs:p-2">
             <Link to={'/'}>
-                <div className="flex justify-start w-full items-center">
+                <div className="flex justify-start w-full items-center mb-10">
                     <img src="/img/home.png" alt="" style={{ filter: 'invert(100%)' }} width={25} />
                     <p className='text-xl uppercase text-white font-bold'>Home</p>
                 </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import clienteAxios from "../../../config/clienteAxios";
+import moment from "moment";
 
 const estaciones = {
   "Surtido": ["19 LENS LOG"],
@@ -15,12 +16,10 @@ const estaciones = {
 };
 
 const Historial_Por_Dia = () => {
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(today.getDate() - 1);
-  const [anio, setAnio] = useState(yesterday.getFullYear().toString());
-  const [mes, setMes] = useState((yesterday.getMonth() + 1).toString().padStart(2, '0'));
-  const [dia, setDia] = useState(yesterday.getDate().toString());
+  const yesterday = moment().subtract(1, 'days');
+  const [anio, setAnio] = useState(yesterday.format('YYYY'));
+  const [mes, setMes] = useState(yesterday.format('MM'));
+  const [dia, setDia] = useState(yesterday.format('DD'));
   const [registros, setRegistros] = useState([]);
   const [metas, setMetas] = useState({});
 
@@ -31,9 +30,25 @@ const Historial_Por_Dia = () => {
   useEffect(() => {
     const obtenerRegistros = async () => {
       try {
-        const { data } = await clienteAxios(`/historial/historial-2/${anio}/${mes}/${dia}`);
-        console.log("Datos obtenidos de la API:", data);
-        setRegistros(data.registros || []);
+        const fechaInicio = moment(`${anio}-${mes}-${dia} 06:30`);
+        const fechaFin = moment(fechaInicio).add(1, 'days').set({hour: 6, minute: 29});
+
+        const { data: dataDiaActual } = await clienteAxios(`/historial/historial-2/${anio}/${mes}/${dia}`);
+        const { data: dataDiaSiguiente } = await clienteAxios(`/historial/historial-2/${fechaFin.format('YYYY')}/${fechaFin.format('MM')}/${fechaFin.format('DD')}`);
+
+        const registrosCombinados = [
+          ...dataDiaActual.registros.filter(r => {
+            const hora = moment(r.hour, 'HH:mm');
+            return hora.isSameOrAfter(moment('06:30', 'HH:mm'));
+          }),
+          ...dataDiaSiguiente.registros.filter(r => {
+            const hora = moment(r.hour, 'HH:mm');
+            return hora.isBefore(moment('06:30', 'HH:mm'));
+          })
+        ];
+
+        console.log("Datos obtenidos de la API:", registrosCombinados);
+        setRegistros(registrosCombinados);
       } catch (error) {
         console.error("Error al obtener los registros:", error);
         setRegistros([]);
@@ -54,34 +69,28 @@ const Historial_Por_Dia = () => {
           acc[curr.name] = curr.meta;
           return acc;
         }, {});
-
         const metasPorMaquinaLensLog = responseMetasLensLog.data.registros.reduce((acc, curr) => {
           if (curr.name.includes('LENS LOG') || curr.name.includes('JOB COMPLETE') || curr.name.includes('DEBLOCKING')) {
             acc[curr.name] = curr.meta;
           }
           return acc;
         }, {});
-
         const metasPorMaquinaGeneradores = responseMetasGeneradores.data.registros.reduce((acc, curr) => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
         }, {});
-
         const metasPorMaquinaPulidos = responseMetasPulidos.data.registros.reduce((acc, curr) => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
         }, {});
-
         const metasPorMaquinaEngravers = responseMetasEngravers.data.registros.reduce((acc, curr) => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
         }, {});
-
         const metasPorMaquinaTerminados = responseMetasTerminados.data.registros.reduce((acc, curr) => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
         }, {});
-
         const metasPorMaquinaBiselados = responseMetasBiselados.data.registros.reduce((acc, curr) => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
@@ -111,12 +120,13 @@ const Historial_Por_Dia = () => {
       acc[name] = { hits: 0, turnos: { matutino: 0, vespertino: 0, nocturno: 0 } };
     }
     acc[name].hits += hits;
-    const [hora, minuto] = registro.hour.split(':').map(Number);
-    if ((hora > 6 || (hora === 6 && minuto >= 30)) && (hora < 14 || (hora === 14 && minuto < 30))) {
+    const hora = moment(registro.hour, 'HH:mm');
+    
+    if (hora.isBetween(moment('06:30', 'HH:mm'), moment('14:29', 'HH:mm'), null, '[]')) {
       acc[name].turnos.matutino += hits;
-    } else if ((hora > 14 || (hora === 14 && minuto >= 30)) && (hora < 21 || (hora === 21 && minuto < 30))) {
+    } else if (hora.isBetween(moment('14:30', 'HH:mm'), moment('21:29', 'HH:mm'), null, '[]')) {
       acc[name].turnos.vespertino += hits;
-    } else if ((hora > 19 || (hora === 19 && minuto >= 30)) || (hora < 2 || (hora === 1 && minuto < 30))) {
+    } else {
       acc[name].turnos.nocturno += hits;
     }
     return acc;
@@ -151,6 +161,7 @@ const Historial_Por_Dia = () => {
   }, {});
 
   const totalHits = Object.values(registrosAgrupados).reduce((acc, { hits }) => acc + hits, 0);
+
   const totalHitsPorTurno = Object.values(hitsPorEstacionYTurno).reduce((acc, { matutino, vespertino, nocturno }) => {
     acc.matutino += matutino;
     acc.vespertino += vespertino;
@@ -163,16 +174,22 @@ const Historial_Por_Dia = () => {
   };
 
   const renderizarTablasPorEstacion = () => {
+    const fechaInicio = moment(`${anio}-${mes}-${dia} 06:30`).format('YYYY-MM-DD HH:mm');
+    const fechaFin = moment(`${anio}-${mes}-${dia} 06:30`).add(1, 'days').format('YYYY-MM-DD HH:mm');
+  
     return Object.entries(estaciones).map(([nombreEstacion, maquinas]) => {
       const registrosEstacion = maquinas.map((maquina) => registrosAgrupados[maquina]).filter(Boolean);
       if (registrosEstacion.length === 0) return null;
+  
+      const totalHitsEstacion = registrosEstacion.reduce((total, registro) => total + registro.hits, 0);
+  
       return (
         <div key={nombreEstacion} className="mb-8">
           <table className="min-w-full bg-white border border-gray-300 shadow-lg rounded-lg">
             <thead className="bg-blue-500 text-white">
               <tr>
                 <th className="py-2 px-4 border-b text-center font-medium w-1/4">Nombre</th>
-                <th className="py-2 px-4 border-b text-center font-medium w-1/4">Fecha</th>
+                <th className="py-2 px-4 border-b text-center font-medium w-1/4">Rango de Fecha</th>
                 <th className="py-2 px-4 border-b text-center font-medium w-1/4">Hits</th>
                 <th className="py-2 px-4 border-b text-center font-medium w-1/4">Meta</th>
               </tr>
@@ -181,17 +198,22 @@ const Historial_Por_Dia = () => {
               {registrosEstacion.map((registro, index) => {
                 const maquina = maquinas[index];
                 const metaMaquina = metas[maquina] || 0;
-                const metaJornada = metaMaquina * 19; // 19 horas de 06:30 AM a 01:30 AM
+                const metaJornada = metaMaquina * 24; // 24 horas completas
                 const claseMeta = getClassName(registro.hits, metaJornada);
                 return (
                   <tr key={index} className="bg-white even:bg-gray-100">
                     <td className="py-2 px-4 border-b text-center w-1/4">{maquina}</td>
-                    <td className="py-2 px-4 border-b text-center w-1/4">{`${anio}-${mes}-${dia}`}</td>
+                    <td className="py-2 px-4 border-b text-center w-1/4">{`${fechaInicio} - ${fechaFin}`}</td>
                     <td className={`py-2 px-4 border-b text-center w-1/4 ${claseMeta}`}>{registro.hits}</td>
                     <td className="py-2 px-4 border-b text-center w-1/4">{metaJornada}</td>
                   </tr>
                 );
               })}
+              <tr className="bg-gray-200">
+                <td className="py-2 px-4 border-b text-center w-1/4" colSpan="2">Total</td>
+                <td className="py-2 px-4 border-b text-center w-1/4 text-blue-700 font-bold">{totalHitsEstacion}</td>
+                <td className="py-2 px-4 border-b text-center w-1/4"></td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -243,7 +265,7 @@ const Historial_Por_Dia = () => {
           <label className="block mb-1 sm:mb-2 text-gray-600">Día</label>
           <select className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg" value={dia} onChange={handleDiaChange}>
             {[...Array(31).keys()].map((day) => (
-              <option key={day + 1} value={day + 1}>{day + 1}</option>
+              <option key={day + 1} value={(day + 1).toString().padStart(2, '0')}>{day + 1}</option>
             ))}
           </select>
         </div>
