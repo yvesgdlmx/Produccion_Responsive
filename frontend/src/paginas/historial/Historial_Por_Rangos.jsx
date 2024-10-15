@@ -100,38 +100,41 @@ const Historial_Por_Rangos = () => {
     return Object.entries(estaciones).map(([nombreEstacion, maquinas]) => {
       const registrosEstacion = maquinas.map((maquina) => registrosAgrupados[maquina]).filter(Boolean);
       if (registrosEstacion.length === 0) return null;
-  
-      // Calculamos el total de hits para esta estación
       const totalHitsEstacion = registrosEstacion.reduce((total, registro) => total + registro.hits, 0);
   
       return (
         <div key={nombreEstacion} className="mb-8">
-          <table className="min-w-full bg-white border border-gray-300 shadow-lg rounded-lg">
-            <thead className="bg-blue-500 text-white">
-              <tr>
-                <th className="py-2 px-4 border-b text-center font-medium w-1/3">Nombre</th>
-                <th className="py-2 px-4 border-b text-center font-medium w-1/3">Rango de Fecha</th>
-                <th className="py-2 px-4 border-b text-center font-medium w-1/3">Hits</th>
-              </tr>
-            </thead>
-            <tbody>
-              {registrosEstacion.map((registro, index) => {
-                const maquina = maquinas[index];
-                return (
-                  <tr key={index} className="bg-white even:bg-gray-100">
-                    <td className="py-2 px-4 border-b text-center w-1/3">{maquina}</td>
-                    <td className="py-2 px-4 border-b text-center w-1/3">{rangoFecha}</td>
-                    <td className="py-2 px-4 border-b text-center w-1/3">{registro.hits}</td>
-                  </tr>
-                );
-              })}
-              {/* Agregamos la fila de total */}
-              <tr className="bg-gray-200">
-                <td className="py-2 px-4 border-b text-center w-1/3" colSpan="2">Total</td>
-                <td className="py-2 px-4 border-b text-center w-1/3 text-blue-700 font-bold">{totalHitsEstacion}</td>
-              </tr>
-            </tbody>
-          </table>
+          <p className="md:hidden text-center mb-2 text-sm text-gray-600">
+            Rango de Fecha: {rangoFecha}
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full bg-white border border-gray-300 shadow-lg rounded-lg table-fixed">
+              <thead className="bg-blue-500 text-white">
+                <tr>
+                  <th className="w-1/3 py-2 px-4 border-b text-center font-medium">Nombre</th>
+                  <th className="hidden md:table-cell w-1/3 py-2 px-4 border-b text-center font-medium">Rango de Fecha</th>
+                  <th className="w-1/3 py-2 px-4 border-b text-center font-medium">Hits</th>
+                </tr>
+              </thead>
+              <tbody>
+                {registrosEstacion.map((registro, index) => {
+                  const maquina = maquinas[index];
+                  return (
+                    <tr key={index} className="bg-white even:bg-gray-100">
+                      <td className="w-1/3 py-2 px-4 border-b text-center">{maquina}</td>
+                      <td className="hidden md:table-cell w-1/3 py-2 px-4 border-b text-center">{rangoFecha}</td>
+                      <td className="w-1/3 py-2 px-4 border-b text-center">{registro.hits}</td>
+                    </tr>
+                  );
+                })}
+                <tr className="bg-gray-200">
+                  <td className="py-2 px-4 border-b text-center font-bold">Total</td>
+                  <td className="hidden md:table-cell py-2 px-4 border-b text-center"></td>
+                  <td className="w-1/3 py-2 px-4 border-b text-center text-blue-700 font-bold">{totalHitsEstacion}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       );
     });
