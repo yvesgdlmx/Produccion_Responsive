@@ -147,7 +147,7 @@ const Totales_Produccion_Estacion = () => {
                     </thead>
                     <tbody className="text-center bg-white">
                         <tr className="font-semibold text-gray-700">
-                            <Link to={'/totales_surtido_maquina'} className="link__tabla">
+                            <Link to={'/totales_produccion_maquina'} className="link__tabla">
                                 <div className="flex items-center justify-center">
                                     <td className="py-2 px-4 border-b min-w-[150px] whitespace-nowrap text-sm md:text-base">
                                         Producción <br />
@@ -189,7 +189,7 @@ const Totales_Produccion_Estacion = () => {
                         })}
                     </div>
                     <div className="flex justify-center mt-4">
-                        <Link to={'/totales_surtido_maquina'} className="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">
+                        <Link to={'/totales_produccion_maquina'} className="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">
                            <button className="text-white font-bold uppercase"> Ver Detalles </button>
                         </Link>
                     </div>
