@@ -117,7 +117,8 @@ const Totales_AR_Estacion = () => {
                     <tbody>
                         <tr className="font-semibold text-gray-700">
                             <Link to={'/totales_ar_maquina'} className="link__tabla">
-                                <div className="flex items-center justify-center">
+                                <div className="flex items-center justify-center hover:scale-105 transition-transform duration-300">
+                                <img src="./img/ver.png" alt="" width={25} className="relative left-6"/>
                                     <td className="py-5 px-4 border-b min-w-[150px] whitespace-nowrap text-center">AR</td>
                                 </div>
                             </Link>

@@ -148,7 +148,8 @@ const Totales_Produccion_Estacion = () => {
                     <tbody className="text-center bg-white">
                         <tr className="font-semibold text-gray-700">
                             <Link to={'/totales_produccion_maquina'} className="link__tabla">
-                                <div className="flex items-center justify-center">
+                                <div className="flex items-center justify-center hover:scale-105 transition-transform duration-300">
+                                    <img src="./img/ver.png" alt="" width={25} className="relative left-6"/>
                                     <td className="py-2 px-4 border-b min-w-[150px] whitespace-nowrap text-sm md:text-base">
                                         Producción <br />
                                         <span className="text-gray-500">Meta: <span>{meta}</span></span>

@@ -52,11 +52,43 @@ const Tableros_Terminado = () => {
     }
   };
 
+  const cambiarComponenteAnterior = () => {
+    const currentIndex = componentes.indexOf(componenteActivo);
+    const newIndex = (currentIndex - 1 + componentes.length) % componentes.length;
+    setComponenteActivo(componentes[newIndex]);
+    setContador(10); // Reinicia el contador
+  };
+
+  const cambiarComponenteSiguiente = () => {
+    const currentIndex = componentes.indexOf(componenteActivo);
+    const newIndex = (currentIndex + 1) % componentes.length;
+    setComponenteActivo(componentes[newIndex]);
+    setContador(10); // Reinicia el contador
+  };
+
   return (
     <div>
-      <button className='bg-blue-500 text-white font-bold uppercase p-2 rounded-md mb-6 hover:bg-blue-600 transition duration-300 ease-in-out' onClick={togglePantallaCompleta}>
+      <button className='bg-blue-500 text-white font-bold uppercase p-2 rounded-md mb-6 hover:bg-blue-600 transition duration-300 ease-in-out ml-4' onClick={togglePantallaCompleta}>
         Pantalla Completa
       </button>
+      
+      {!isFullScreen && (
+        <div className="flex justify-between mb-4">
+          <button 
+            className='bg-gray-500 text-white font-bold uppercase p-2 rounded-md hover:bg-gray-600 transition duration-300 ease-in-out ml-4'
+            onClick={cambiarComponenteAnterior}
+          >
+            Anterior
+          </button>
+          <button 
+            className='bg-gray-500 text-white font-bold uppercase p-2 rounded-md hover:bg-gray-600 transition duration-300 ease-in-out mr-4'
+            onClick={cambiarComponenteSiguiente}
+          >
+            Siguiente
+          </button>
+        </div>
+      )}
+
       <div
         id="componente-activo"
         style={{

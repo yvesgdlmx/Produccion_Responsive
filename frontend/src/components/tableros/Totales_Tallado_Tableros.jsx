@@ -159,7 +159,7 @@ const Totales_Tallado_Tableros = () => {
   return (
     <>
       <div className="w-full px-4">
-        <div className="lg:block">
+        <div className="lg:block overflow-x-auto">
           <table className="min-w-full bg-white border text-lg font-bold">
             <thead>
               <tr className="bg-blue-500 text-white">
