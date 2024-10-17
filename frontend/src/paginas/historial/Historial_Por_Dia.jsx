@@ -176,25 +176,28 @@ const Historial_Por_Dia = () => {
   const renderizarTablasPorEstacion = () => {
     const fechaInicio = moment(`${anio}-${mes}-${dia} 06:30`).format('YYYY-MM-DD HH:mm');
     const fechaFin = moment(`${anio}-${mes}-${dia} 06:30`).add(1, 'days').format('YYYY-MM-DD HH:mm');
-  
+    
     return Object.entries(estaciones).map(([nombreEstacion, maquinas]) => {
       const registrosEstacion = maquinas.map((maquina) => registrosAgrupados[maquina]).filter(Boolean);
       if (registrosEstacion.length === 0) return null;
       const totalHitsEstacion = registrosEstacion.reduce((total, registro) => total + registro.hits, 0);
-  
+      const turnosEstacion = hitsPorEstacionYTurno[nombreEstacion];
+      
       return (
         <div key={nombreEstacion} className="mb-8">
           <p className="md:hidden text-center mb-2 text-sm text-gray-600">
             Rango de Fecha: {fechaInicio} - {fechaFin}
           </p>
-          <div className="overflow-x-auto">
+          
+          {/* Vista para pantallas grandes */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full bg-white border border-gray-300 shadow-lg rounded-lg table-fixed">
               <thead className="bg-blue-500 text-white">
                 <tr>
-                  <th className="w-1/3 md:w-1/4 py-2 px-4 border-b text-center font-medium">Nombre</th>
-                  <th className="w-1/4 hidden md:table-cell py-2 px-4 border-b text-center font-medium">Rango de Fecha</th>
-                  <th className="w-1/3 md:w-1/4 py-2 px-4 border-b text-center font-medium">Hits</th>
-                  <th className="w-1/3 md:w-1/4 py-2 px-4 border-b text-center font-medium">Meta</th>
+                  <th className="w-1/4 py-2 px-4 border-b text-center font-medium">Nombre</th>
+                  <th className="w-1/4 py-2 px-4 border-b text-center font-medium">Rango de Fecha</th>
+                  <th className="w-1/4 py-2 px-4 border-b text-center font-medium">Hits</th>
+                  <th className="w-1/4 py-2 px-4 border-b text-center font-medium">Meta</th>
                 </tr>
               </thead>
               <tbody>
@@ -203,40 +206,85 @@ const Historial_Por_Dia = () => {
                   const metaMaquina = metas[maquina] || 0;
                   const metaJornada = metaMaquina * 24;
                   const claseMeta = getClassName(registro.hits, metaJornada);
-  
                   return (
                     <tr key={index} className="bg-white even:bg-gray-100">
-                      <td className="w-1/3 md:w-1/4 py-2 px-4 border-b text-center">{maquina}</td>
-                      <td className="w-1/4 hidden md:table-cell py-2 px-4 border-b text-center">{`${fechaInicio} - ${fechaFin}`}</td>
-                      <td className={`w-1/3 md:w-1/4 py-2 px-4 border-b text-center ${claseMeta}`}>{registro.hits}</td>
-                      <td className="w-1/3 md:w-1/4 py-2 px-4 border-b text-center">{metaJornada}</td>
+                      <td className="w-1/4 py-2 px-4 border-b text-center">{maquina}</td>
+                      <td className="w-1/4 py-2 px-4 border-b text-center">{`${fechaInicio} - ${fechaFin}`}</td>
+                      <td className={`w-1/4 py-2 px-4 border-b text-center ${claseMeta}`}>{registro.hits}</td>
+                      <td className="w-1/4 py-2 px-4 border-b text-center">{metaJornada}</td>
                     </tr>
                   );
                 })}
                 <tr className="bg-gray-200">
-                  <td className="py-2 px-4 border-b text-center font-bold" colSpan="2">Total</td>
+                  <td className="py-2 px-4 border-b text-center font-bold text-gray-600" colSpan="2">Total</td>
                   <td className="py-2 px-4 border-b text-center text-blue-700 font-bold">{totalHitsEstacion}</td>
                   <td className="py-2 px-4 border-b text-center"></td>
+                </tr>
+                <tr className="bg-green-50">
+                  <td className="py-2 px-4 border-b text-center font-bold text-gray-600" colSpan="2">Turnos: </td>
+                  <td className="py-2 px-4 border-b text-center" colSpan="2">
+                    <div className="flex justify-between">
+                      <span>Matutino: <strong className="text-gray-600">{turnosEstacion.matutino}</strong></span>
+                      <span>Vespertino: <strong className="text-gray-600">{turnosEstacion.vespertino}</strong></span>
+                      <span>Nocturno: <strong className="text-gray-600">{turnosEstacion.nocturno}</strong></span>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
+          
+         {/* Vista para dispositivos móviles */}
+          <div className="md:hidden bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
+            <div className="bg-blue-500 text-white p-3">
+              <h3 className="text-lg font-semibold">{nombreEstacion}</h3>
+            </div>
+            
+            <div className="p-4 space-y-4">
+              {registrosEstacion.map((registro, index) => {
+                const maquina = maquinas[index];
+                const metaMaquina = metas[maquina] || 0;
+                const metaJornada = metaMaquina * 24;
+                const claseMeta = getClassName(registro.hits, metaJornada);
+                
+                return (
+                  <div key={index} className="flex justify-between items-center border-b border-gray-200 pb-2">
+                    <span className="font-medium text-gray-700">{maquina}</span>
+                    <div className="text-right">
+                      <span className={`block ${claseMeta}`}>{registro.hits} / {metaJornada}</span>
+                      <span className="text-xs text-gray-500">Hits / Meta</span>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              <div className="flex justify-between items-center pt-2 border-gray-200">
+                <span className="font-semibold text-gray-700">Total Hits</span>
+                <span className="font-bold text-blue-600">{totalHitsEstacion}</span>
+              </div>
+            </div>
+            
+            <div className="bg-green-50 p-4 border-t border-gray-200">
+              <h4 className="font-semibold text-green-700 mb-2">Turnos</h4>
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div>
+                  <span className="block text-gray-600">Matutino</span>
+                  <span className="font-bold text-gray-500">{turnosEstacion.matutino}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-600">Vespertino</span>
+                  <span className="font-bold text-gray-500">{turnosEstacion.vespertino}</span>
+                </div>
+                <div>
+                  <span className="block text-gray-600">Nocturno</span>
+                  <span className="font-bold text-gray-500">{turnosEstacion.nocturno}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       );
     });
-  };
-
-  const renderizarTotalesPorEstacionYTurno = () => {
-    return Object.entries(hitsPorEstacionYTurno).map(([nombreEstacion, turnos]) => (
-      <div key={nombreEstacion} className="mb-4 p-4 bg-gray-100 rounded-lg shadow-md">
-        <h3 className="font-semibold text-lg mb-2">{nombreEstacion}</h3>
-        <div className="flex flex-col sm:flex-row justify-between">
-          <p>Turno matutino: <span className="font-bold text-blue-700">{turnos.matutino}</span></p>
-          <p>Turno vespertino: <span className="font-bold text-blue-700">{turnos.vespertino}</span></p>
-          <p>Turno nocturno: <span className="font-bold text-blue-700">{turnos.nocturno}</span></p>
-        </div>
-      </div>
-    ));
   };
 
   return (
@@ -276,9 +324,6 @@ const Historial_Por_Dia = () => {
         </div>
       </div>
       {renderizarTablasPorEstacion()}
-      <div className="mt-6 sm:mt-8">
-        {renderizarTotalesPorEstacionYTurno()}
-      </div>
     </div>
   );
 };
