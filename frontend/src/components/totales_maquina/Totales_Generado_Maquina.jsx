@@ -1,7 +1,55 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import clienteAxios from "../../../config/clienteAxios";
 import Navegacion from "../others/Navegacion";
 import moment from 'moment-timezone';
+import { ChevronDownIcon, ChevronUpIcon, CogIcon } from '@heroicons/react/24/solid';
+
+// Componente para el título desplegable
+const TituloSeccion = ({ titulo, isOpen, toggle }) => (
+  <div 
+    className="flex justify-between items-center bg-gradient-to-r from-gray-50 to-gray-100 p-4 py-6 cursor-pointer rounded-lg shadow-sm border border-gray-200 transition-all duration-300 ease-in-out hover:shadow-md"
+    onClick={toggle}
+  >
+    <div className="flex items-center space-x-3">
+      <CogIcon className="h-6 w-6 text-blue-300" />
+      <h2 className="font-semibold text-gray-600">{titulo}</h2>
+    </div>
+    {isOpen ? <ChevronUpIcon className="h-5 w-5 text-gray-500" /> : <ChevronDownIcon className="h-5 w-5 text-gray-500" />}
+  </div>
+);
+
+const SeccionMenu = ({ titulo, isOpen, toggle, children }) => {
+  const contentRef = useRef(null);
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+      if (isOpen) {
+          setHeight(contentRef.current.scrollHeight);
+      } else {
+          setHeight(0);
+      }
+  }, [isOpen]);
+
+  return (
+      <div className="overflow-hidden mb-4">
+          <TituloSeccion 
+              titulo={titulo} 
+              isOpen={isOpen} 
+              toggle={toggle}
+          />
+          <div 
+              ref={contentRef}
+              style={{ maxHeight: isOpen ? `${height}px` : '0px' }}
+              className={`
+                  transition-all duration-300 ease-in-out
+                  ${isOpen ? 'opacity-100 mt-4' : 'opacity-0'}
+              `}
+          >
+              {children}
+          </div>
+      </div>
+  );
+};
 
 const Totales_Generado_Maquina = () => {
   useEffect(() => {
@@ -10,6 +58,12 @@ const Totales_Generado_Maquina = () => {
     }, 300000); // Actualiza cada 5 minutos
     return () => clearInterval(interval);
   }, []);
+
+  const [seccionesAbiertas, setSeccionesAbiertas] = useState({});
+
+    const toggleSeccion = (celula) => {
+        setSeccionesAbiertas(prev => ({ ...prev, [celula]: !prev[celula] }));
+    };
 
   const [horasUnicas, setHorasUnicas] = useState([]);
   const [metasPorMaquina, setMetasPorMaquina] = useState({});
@@ -167,58 +221,61 @@ const Totales_Generado_Maquina = () => {
   return (
     <>
       <div className="max-w-screen-xl">
-        {/* Diseño tipo card para pantallas pequeñas y medianas */}
-        <div className="lg:hidden mt-4">
+         {/* Diseño tipo card para pantallas pequeñas y medianas */}
+         <div className="lg:hidden mt-4">
           {ordenCelulas.map((celula, index) => {
-            const registrosCelula = registrosAgrupados[celula] || [];
-            const totalAcumulado = totalesAcumulados[celula] || 0;
-            const meta = metasPorMaquina[celula] || 0;
-            const metaAcumulada = meta * horasUnicas.length;
-            const claseTotalAcumulado = totalAcumulado >= metaAcumulada ? "text-green-500" : "text-red-500";
-            return (
-              <div key={index} className="bg-white shadow-md rounded-lg mb-4 p-6">
-                <div className="flex justify-between border-b pb-2">
-                  <span className="font-bold text-gray-700">Nombre:</span>
-                  <span className="font-bold text-gray-700">{celula}</span>
-                </div>
-                <div className="flex justify-between border-b py-4">
-                  <span className="font-bold text-gray-700">Total Acumulado:</span>
-                  <span className={`font-bold ${claseTotalAcumulado}`}>{totalAcumulado}</span>
-                </div>
-                <div className="flex justify-between border-b py-4">
-                  <span className="font-bold text-gray-700">Meta:</span>
-                  <span className="font-bold text-gray-700">{meta || 'No definida'}</span>
-                </div>
-                <div className="py-4">
-                  <span className="font-bold text-gray-700">Horas:</span>
-                  {horasUnicas.map((hora, idx) => {
-                    const [horaInicio, horaFin] = hora.split(' - ');
-                    const totalHits = registrosCelula.filter(r => {
-                      const hourMoment = moment(r.hour, 'HH:mm:ss');
-                      const startMoment = moment(horaInicio, 'HH:mm');
-                      const endMoment = moment(horaFin, 'HH:mm');
-                      
-                      if (startMoment.isAfter(endMoment)) {
-                        // Caso especial para el intervalo que cruza la medianoche
-                        return hourMoment.isSameOrAfter(startMoment) || hourMoment.isBefore(endMoment);
-                      } else {
-                        return hourMoment.isSameOrAfter(startMoment) && hourMoment.isBefore(endMoment);
-                      }
-                    }).reduce((acc, curr) => acc + parseInt(curr.hits || 0), 0);
-                    const bgColor = idx % 2 === 0 ? 'bg-slate-200' : 'bg-slate-300';
-                    const hitsClass = totalHits >= meta ? "text-green-500" : "text-red-500";
-                    return (
-                      <div key={idx} className={`flex justify-between py-2 px-4 ${bgColor}`}>
-                        <span className="font-bold text-gray-700">{hora}:</span>
-                        <span className={`font-bold ${hitsClass}`}>{totalHits}</span>
+              const registrosCelula = registrosAgrupados[celula] || [];
+              const totalAcumulado = totalesAcumulados[celula] || 0;
+              const meta = metasPorMaquina[celula] || 0;
+              const metaAcumulada = meta * horasUnicas.length;
+              const claseTotalAcumulado = totalAcumulado >= metaAcumulada ? "text-green-500" : "text-red-500";
+
+              return (
+                  <SeccionMenu 
+                      key={index}
+                      titulo={celula}
+                      isOpen={seccionesAbiertas[celula] || false}
+                      toggle={() => toggleSeccion(celula)}
+                  >
+                      <div className="bg-white shadow-md rounded-lg p-6">
+                          <div className="flex justify-between border-b pb-2">
+                              <span className="font-bold text-gray-700">Total Acumulado:</span>
+                              <span className={`font-bold ${claseTotalAcumulado}`}>{totalAcumulado}</span>
+                          </div>
+                          <div className="flex justify-between border-b py-4">
+                              <span className="font-bold text-gray-700">Meta:</span>
+                              <span className="font-bold text-gray-700">{meta || 'No definida'}</span>
+                          </div>
+                          <div className="py-4">
+                              <span className="font-bold text-gray-700">Horas:</span>
+                              {horasUnicas.map((hora, idx) => {
+                                  const [horaInicio, horaFin] = hora.split(' - ');
+                                  const totalHits = registrosCelula.filter(r => {
+                                      const hourMoment = moment(r.hour, 'HH:mm:ss');
+                                      const startMoment = moment(horaInicio, 'HH:mm');
+                                      const endMoment = moment(horaFin, 'HH:mm');
+                                      if (startMoment.isAfter(endMoment)) {
+                                          // Caso especial para el intervalo que cruza la medianoche
+                                          return hourMoment.isSameOrAfter(startMoment) || hourMoment.isBefore(endMoment);
+                                      } else {
+                                          return hourMoment.isSameOrAfter(startMoment) && hourMoment.isBefore(endMoment);
+                                      }
+                                  }).reduce((acc, curr) => acc + parseInt(curr.hits || 0), 0);
+                                  const bgColor = idx % 2 === 0 ? 'bg-slate-200' : 'bg-slate-300';
+                                  const hitsClass = totalHits >= meta ? "text-green-500" : "text-red-500";
+                                  return (
+                                      <div key={idx} className={`flex justify-between py-2 px-4 ${bgColor}`}>
+                                          <span className="font-bold text-gray-700">{hora}:</span>
+                                          <span className={`font-bold ${hitsClass}`}>{totalHits}</span>
+                                      </div>
+                                  );
+                              })}
+                          </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  </SeccionMenu>
+                );
+              })}
+          </div>
         {/* Diseño de tabla para pantallas grandes */}
         <div className="hidden lg:block">
           <Navegacion/>
@@ -286,36 +343,84 @@ const Totales_Generado_Maquina = () => {
             </tbody>
           </table>
         </div>
-        {/* Totales por turno */}
-        <div className='flex flex-col md:flex-row justify-around mt-4 font-semibold mb-4'>
-  <div className="bg-white p-2 px-10 rounded-lg mb-2 md:mb-0">
-    <p className="text-gray-600 text-sm md:text-base">
-      Total Matutino: 
-      <span className={getClassName(totalesPorTurno.matutino, metaMatutinoFinal)}>
-        {totalesPorTurno.matutino}
-      </span> 
-      / Meta: <span className="text-gray-600 font-bold">{metaMatutinoFinal}</span>
-    </p>
-  </div>
-  <div className="bg-white p-2 px-10 rounded-lg mb-2 md:mb-0">
-    <p className="text-gray-600 text-sm md:text-base">
-      Total Vespertino: 
-      <span className={getClassName(totalesPorTurno.vespertino, metaVespertinoFinal)}>
-        {totalesPorTurno.vespertino}
-      </span> 
-      / Meta: <span className="text-gray-600 font-bold">{metaVespertinoFinal}</span>
-    </p>
-  </div>
-  <div className="bg-white p-2 px-10 rounded-lg">
-    <p className="text-gray-600 text-sm md:text-base">
-      Total Nocturno: 
-      <span className={getClassName(totalesPorTurno.nocturno, metaNocturnoFinal)}>
-        {totalesPorTurno.nocturno}
-      </span> 
-      / Meta: <span className="text-gray-600 font-bold">{metaNocturnoFinal}</span>
-    </p>
-  </div>
-</div>
+       {/* Totales por turno */}
+        <div className='mt-4 font-semibold mb-4'>
+          {/* Diseño para pantallas pequeñas y medianas */}
+          <div className='lg:hidden space-y-4'>
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Turno Matutino</h3>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Total:</span>
+                <span className={`text-lg ${getClassName(totalesPorTurno.matutino, metaMatutinoFinal)}`}>
+                  {totalesPorTurno.matutino}
+                </span>
+              </div>
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-gray-600">Meta:</span>
+                <span className="text-lg font-bold text-gray-800">{metaMatutinoFinal}</span>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Turno Vespertino</h3>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Total:</span>
+                <span className={`text-lg ${getClassName(totalesPorTurno.vespertino, metaVespertinoFinal)}`}>
+                  {totalesPorTurno.vespertino}
+                </span>
+              </div>
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-gray-600">Meta:</span>
+                <span className="text-lg font-bold text-gray-800">{metaVespertinoFinal}</span>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Turno Nocturno</h3>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Total:</span>
+                <span className={`text-lg ${getClassName(totalesPorTurno.nocturno, metaNocturnoFinal)}`}>
+                  {totalesPorTurno.nocturno}
+                </span>
+              </div>
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-gray-600">Meta:</span>
+                <span className="text-lg font-bold text-gray-800">{metaNocturnoFinal}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Diseño original para pantallas grandes */}
+          <div className='hidden lg:flex lg:flex-row justify-around'>
+            <div className="bg-white p-2 px-10 rounded-lg">
+              <p className="text-gray-600 text-base">
+                Total Matutino: 
+                <span className={getClassName(totalesPorTurno.matutino, metaMatutinoFinal)}>
+                  {totalesPorTurno.matutino}
+                </span> 
+                / Meta: <span className="text-gray-600 font-bold">{metaMatutinoFinal}</span>
+              </p>
+            </div>
+            <div className="bg-white p-2 px-10 rounded-lg">
+              <p className="text-gray-600 text-base">
+                Total Vespertino: 
+                <span className={getClassName(totalesPorTurno.vespertino, metaVespertinoFinal)}>
+                  {totalesPorTurno.vespertino}
+                </span> 
+                / Meta: <span className="text-gray-600 font-bold">{metaVespertinoFinal}</span>
+              </p>
+            </div>
+            <div className="bg-white p-2 px-10 rounded-lg">
+              <p className="text-gray-600 text-base">
+                Total Nocturno: 
+                <span className={getClassName(totalesPorTurno.nocturno, metaNocturnoFinal)}>
+                  {totalesPorTurno.nocturno}
+                </span> 
+                / Meta: <span className="text-gray-600 font-bold">{metaNocturnoFinal}</span>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );

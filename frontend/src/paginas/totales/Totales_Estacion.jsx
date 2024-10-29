@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, ChevronUpIcon, CogIcon } from '@heroicons/react/24/solid';
 import Totales_Surtido_Estacion from "../../components/totales_estacion/Totales_Surtido_Estacion";
 import Totales_Tallado_Estacion from "../../components/totales_estacion/Totales_Tallado_Estacion";
@@ -25,22 +25,39 @@ const TituloSeccion = ({ titulo, isOpen, toggle }) => (
   </div>
 );
 
-const SeccionMenu = ({ titulo, isOpen, toggle, children }) => (
-    <div className="overflow-hidden">
-        <TituloSeccion 
-            titulo={titulo} 
-            isOpen={isOpen} 
-            toggle={toggle}
-        />
-        <div className={`
-            md:block md:max-h-full md:opacity-100
-            ${isOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}
-            transition-all duration-300 ease-in-out
-        `}>
-            {children}
+const SeccionMenu = ({ titulo, isOpen, toggle, children }) => {
+    const contentRef = useRef(null);
+    const [height, setHeight] = useState(0);
+
+    useEffect(() => {
+        if (isOpen) {
+            setHeight(contentRef.current.scrollHeight);
+        } else {
+            setHeight(0);
+        }
+    }, [isOpen]);
+
+    return (
+        <div className="overflow-hidden">
+            <TituloSeccion 
+                titulo={titulo} 
+                isOpen={isOpen} 
+                toggle={toggle}
+            />
+            <div 
+                ref={contentRef}
+                style={{ maxHeight: isOpen ? `${height}px` : '0px' }}
+                className={`
+                    transition-all duration-300 ease-in-out
+                    ${isOpen ? 'opacity-100' : 'opacity-0'}
+                    md:block md:opacity-100 md:max-h-none md:overflow-visible
+                `}
+            >
+                {children}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const Totales_Estacion = () => {
     const [secciones, setSecciones] = useState({
@@ -69,36 +86,52 @@ const Totales_Estacion = () => {
 
     return (
         <div className="flex flex-col space-y-2 min-w-full mt-6 px-4 md:px-0">
-            <SeccionMenu titulo="Surtido" isOpen={secciones.surtido} toggle={() => toggleSeccion('surtido')}>
+            <div className="md:hidden">
+                {/* Secciones desplegables para móviles */}
+                <SeccionMenu titulo="Surtido" isOpen={secciones.surtido} toggle={() => toggleSeccion('surtido')}>
+                    <Totales_Surtido_Estacion/>
+                </SeccionMenu>
+                <SeccionMenu titulo="Bloqueo de Tallado" isOpen={secciones.tallado} toggle={() => toggleSeccion('tallado')}>
+                    <Totales_Tallado_Estacion/>
+                </SeccionMenu>
+                <SeccionMenu titulo="Generado" isOpen={secciones.generado} toggle={() => toggleSeccion('generado')}>
+                    <Totales_Generado_Estacion/>
+                </SeccionMenu>
+                <SeccionMenu titulo="Pulido" isOpen={secciones.pulido} toggle={() => toggleSeccion('pulido')}>
+                    <Totales_Pulido_Estacion/>
+                </SeccionMenu>
+                <SeccionMenu titulo="Engraver" isOpen={secciones.engraver} toggle={() => toggleSeccion('engraver')}>
+                    <Totales_Engraver_Estacion/>
+                </SeccionMenu>
+                <SeccionMenu titulo="AR" isOpen={secciones.ar} toggle={() => toggleSeccion('ar')}>
+                    <Totales_AR_Estacion/>
+                </SeccionMenu>
+                <SeccionMenu titulo="Desbloqueo" isOpen={secciones.desbloqueo} toggle={() => toggleSeccion('desbloqueo')}>
+                    <Totales_Desbloqueo_Estacion/>
+                </SeccionMenu>
+                <SeccionMenu titulo="Bloqueo de Terminado" isOpen={secciones.terminado} toggle={() => toggleSeccion('terminado')}>
+                    <Totales_Terminado_Estacion/>
+                </SeccionMenu>
+                <SeccionMenu titulo="Biselado" isOpen={secciones.biselado} toggle={() => toggleSeccion('biselado')}>
+                    <Totales_Biselado_Estacion/>
+                </SeccionMenu>
+                <SeccionMenu titulo="Producción" isOpen={secciones.produccion} toggle={() => toggleSeccion('produccion')}>
+                    <Totales_Produccion_Estacion/>
+                </SeccionMenu>
+            </div>
+            <div className="hidden md:block">
+                {/* Secciones siempre visibles para pantallas grandes */}
                 <Totales_Surtido_Estacion/>
-            </SeccionMenu>
-            <SeccionMenu titulo="Tallado" isOpen={secciones.tallado} toggle={() => toggleSeccion('tallado')}>
                 <Totales_Tallado_Estacion/>
-            </SeccionMenu>
-            <SeccionMenu titulo="Generado" isOpen={secciones.generado} toggle={() => toggleSeccion('generado')}>
                 <Totales_Generado_Estacion/>
-            </SeccionMenu>
-            <SeccionMenu titulo="Pulido" isOpen={secciones.pulido} toggle={() => toggleSeccion('pulido')}>
                 <Totales_Pulido_Estacion/>
-            </SeccionMenu>
-            <SeccionMenu titulo="Engraver" isOpen={secciones.engraver} toggle={() => toggleSeccion('engraver')}>
                 <Totales_Engraver_Estacion/>
-            </SeccionMenu>
-            <SeccionMenu titulo="AR" isOpen={secciones.ar} toggle={() => toggleSeccion('ar')}>
                 <Totales_AR_Estacion/>
-            </SeccionMenu>
-            <SeccionMenu titulo="Desbloqueo" isOpen={secciones.desbloqueo} toggle={() => toggleSeccion('desbloqueo')}>
                 <Totales_Desbloqueo_Estacion/>
-            </SeccionMenu>
-            <SeccionMenu titulo="Terminado" isOpen={secciones.terminado} toggle={() => toggleSeccion('terminado')}>
                 <Totales_Terminado_Estacion/>
-            </SeccionMenu>
-            <SeccionMenu titulo="Biselado" isOpen={secciones.biselado} toggle={() => toggleSeccion('biselado')}>
                 <Totales_Biselado_Estacion/>
-            </SeccionMenu>
-            <SeccionMenu titulo="Producción" isOpen={secciones.produccion} toggle={() => toggleSeccion('produccion')}>
                 <Totales_Produccion_Estacion/>
-            </SeccionMenu>
+            </div>
         </div>
     )
 };
