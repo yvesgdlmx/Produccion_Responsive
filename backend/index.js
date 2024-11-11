@@ -18,6 +18,7 @@ import metaManualesRoutes from './routes/metaManualesRoutes.js'
 import usuarioRoutes from './routes/usuarioRoutes.js'
 import manualRoutes  from './routes/manualRoutes.js'
 import historialRoutes from './routes/historialRoutes.js'
+import ReportesProduccionRoutes from './routes/ReportesProduccionRoutes.js'
 
 const app = express();
 app.use(express.json());
@@ -70,6 +71,8 @@ app.use("/api/metas", metaBiseladosRoutes);
 app.use("/api/metas", metaManualesRoutes);
 /* Rutas de autenticación */
 app.use('/api/login', usuarioRoutes)
+/* Reportes de produccion */
+app.use('/api/reportes', ReportesProduccionRoutes)
 
 const PORT = process.env.PORT || 3000;
 const servidor = app.listen(PORT, () => {
