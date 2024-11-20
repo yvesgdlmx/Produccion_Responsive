@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 import Layout from './layouts/Layout';
-import Procesos from './paginas/procesos';
+import Procesos from './paginas/Procesos';
 import ScrollToTop from './components/others/ScrollToTop';
 /*Totales estacion*/
 import Totales_Estacion from './paginas/totales/Totales_Estacion';
@@ -15,6 +15,8 @@ import Totales_Biselado_Maquina from './components/totales_maquina/Totales_Bisel
 import Totales_Produccion_Maquina from './components/totales_maquina/Totales_Produccion_Maquina';
 import Totales_AR_Maquina from './components/totales_maquina/Totales_AR_Maquina';
 import Totales_Desbloqueo_Maquina from './components/totales_maquina/Totales_Desbloqueo_Maquina';
+import Totales_HardCoat_Maquina from './components/totales_maquina/Totales_HardCoat_Maquina';
+import Totales_Recubrimiento_Maquina from './components/totales_maquina/Totales_Recubrimiento_Maquina';
 /*Metas*/
 import Surtido_Metas from './paginas/metas/Surtido_Metas';
 import Tallado_Metas from './paginas/metas/Tallado_Metas';
@@ -59,6 +61,8 @@ function App() {
                       <Route path='/totales_generado_maquina' element={<Totales_Generado_Maquina/>}/>
                       <Route path='/totales_pulido_maquina' element={<Totales_Pulido_Maquina/>} />
                       <Route path='/totales_ar_maquina' element={<Totales_AR_Maquina/>}/>
+                      <Route path='/totales_hardcoat_maquina' element={<Totales_HardCoat_Maquina/>} />
+                      <Route path='/totales_recubrimiento_maquina' element={<Totales_Recubrimiento_Maquina/>}/>
                       <Route path='/totales_desblocking_maquina' element={<Totales_Desbloqueo_Maquina/>}/>
                       <Route path='/totales_tallado_maquina' element={<Totales_Tallado_Maquina/>}/>
                       <Route path='/totales_engraver_maquina' element={<Totales_Engraver_Maquina/>}/>
