@@ -19,6 +19,7 @@ import usuarioRoutes from './routes/usuarioRoutes.js'
 import manualRoutes  from './routes/manualRoutes.js'
 import historialRoutes from './routes/historialRoutes.js'
 import ReportesProduccionRoutes from './routes/ReportesProduccionRoutes.js'
+import reportesAntiguedadRoutes from './routes/reportesAntiguedadRoutes.js'
 
 const app = express();
 app.use(express.json());
@@ -73,6 +74,7 @@ app.use("/api/metas", metaManualesRoutes);
 app.use('/api/login', usuarioRoutes)
 /* Reportes de produccion */
 app.use('/api/reportes', ReportesProduccionRoutes)
+app.use('/api/reportes', reportesAntiguedadRoutes)
 
 const PORT = process.env.PORT || 3000;
 const servidor = app.listen(PORT, () => {
