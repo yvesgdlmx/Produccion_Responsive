@@ -29,6 +29,24 @@ const ReportesProduccion = db.define('conteo_estaciones', {
     hora_insercion: {
         type: DataTypes.TIME,
         defaultValue: DataTypes.NOW
+    },
+    sf: {
+        type: DataTypes.STRING
+    },
+    NVI: {
+        type: DataTypes.INTEGER
+    },
+    HOYA: {
+        type: DataTypes.INTEGER
+    },
+    INK: {
+        type: DataTypes.INTEGER
+    },
+    f_count: {
+        type: DataTypes.INTEGER
+    },
+    s_count: {
+        type: DataTypes.INTEGER
     }
 }, {
     timestamps: false

@@ -1,10 +1,20 @@
 import { Op } from 'sequelize';
+import Sequelize from 'sequelize';
 import Antiguedad from '../models/ReporteAntiguedad.js';
 
 const obtenerDatosAntiguedad = async (req, res) => {
     try {
-        // Obtener todos los registros ordenados por fecha
+        const { mes } = req.params;
+        
         const registros = await Antiguedad.findAll({
+            where: {
+                [Op.and]: [
+                    Sequelize.where(
+                        Sequelize.fn('MONTH', Sequelize.col('today')), 
+                        mes
+                    )
+                ]
+            },
             order: [['enter_date', 'DESC']], 
             raw: true
         });
@@ -18,7 +28,6 @@ const obtenerDatosAntiguedad = async (req, res) => {
             });
         }
 
-        // Formatear las fechas en los registros
         const registrosFormateados = registros.map(registro => ({
             ...registro,
             enter_date: new Date(registro.enter_date).toISOString().split('T')[0],
@@ -29,7 +38,6 @@ const obtenerDatosAntiguedad = async (req, res) => {
             total: registrosFormateados.length,
             registros: registrosFormateados
         });
-
     } catch (error) {
         console.error("Error al obtener datos de antigüedad:", error);
         res.status(500).json({

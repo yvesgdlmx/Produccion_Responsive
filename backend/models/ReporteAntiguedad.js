@@ -39,10 +39,6 @@ const Antiguedad = db.define('antiguedades', {
         type: DataTypes.INTEGER,
         allowNull: true
     },
-    franklin_ip: {
-        type: DataTypes.INTEGER,
-        allowNull: true
-    },
     digital_calculator: {
         type: DataTypes.DECIMAL(10,2),
         allowNull: true

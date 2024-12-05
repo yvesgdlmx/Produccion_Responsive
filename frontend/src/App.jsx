@@ -46,6 +46,7 @@ import { AuthProvider } from '../context/AuthProvider';
 /* Reportes */
 import Reporte from './paginas/reportes/Reporte';
 import ReporteAntiguedad from './paginas/reportes/ReporteAntiguedad';
+import ReporteTrabajosNuevos from './paginas/reportes/ReporteTrabajosNuevos';
 
 function App() {
 
@@ -90,6 +91,7 @@ function App() {
                       <Route path='/tableros_tallado_terminado' element={<Tableros_Tallado_Terminado/>}/>
                       <Route path='/reportes' element={<Reporte/>} />
                       <Route path='/reportes_antiguedad' element={<ReporteAntiguedad/>} />
+                      <Route path='/reportes_trabajos_nuevos' element={<ReporteTrabajosNuevos/>} />
                   </Route>
                   <Route path='/auth' element={<AuthLayout/>}>
                     <Route index element={<Login/>}/>

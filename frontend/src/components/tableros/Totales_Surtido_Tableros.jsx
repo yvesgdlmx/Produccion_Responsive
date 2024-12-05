@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import clienteAxios from "../../../config/clienteAxios";
-import Navegacion from "../others/Navegacion";
 import moment from 'moment-timezone';
 
-const Totales_Biselado_Tableros = () => {
+const Totales_Surtido_Tableros = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       window.location.reload();
@@ -22,42 +21,17 @@ const Totales_Biselado_Tableros = () => {
     nocturno: 0
   });
 
+  // Definimos las máquinas que nos interesan
   const ordenCelulas = [
-    "298 DOUBLER",
-    "299 BISPHERA",
-    "300 EDGER 1",
-    "301 EDGER 2",
-    "302 EDGER 3",
-    "303 EDGER 4",
-    "304 EDGER 5",
-    "305 EDGER 6",
-    "306 EDGER 7",
-    "307 EDGER 8",
-    "308 EDGER 9",
-    "309 EDGER 10",
-    "310 EDGER 11",
-    "311 EDFGER 12",
-    "313 EDGER 13",
-    "314 EDGER 14",
-    "316 EDGER 15",
-    "317 EDGER 16",
-    "327 EDGER 17",
-    "328 EDGER 18",
-    "329 EDGER 19",
-    "330 EDGER 20",
-    "331 EDGER 21",
-    "332 EDGER 22",
-    "333 EDGER 23",
-    "334 EDGER 24",
-    "312 RAZR",
-    "318 HSE 1",
-    "319 HSE 2"
+    "19 LENS LOG",
+    "20 LENS LOG"
   ];
 
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const responseMetas = await clienteAxios('/metas/metas-biselados');
+        // Obtener metas
+        const responseMetas = await clienteAxios('/metas/metas-manuales');
         const metas = {};
         if (Array.isArray(responseMetas.data.registros)) {
           responseMetas.data.registros.forEach(meta => {
@@ -68,19 +42,22 @@ const Totales_Biselado_Tableros = () => {
         }
         setMetasPorMaquina(metas);
 
-        const responseRegistros = await clienteAxios('/biselado/biselado/actualdia');
+        // Obtener registros
+        const responseRegistros = await clienteAxios('/manual/manual/actualdia');
         const dataRegistros = responseRegistros.data.registros || [];
-
         const ahora = moment().tz('America/Mexico_City');
         let inicioHoy = moment().tz('America/Mexico_City').startOf('day').add(6, 'hours').add(30, 'minutes');
         let finHoy = moment(inicioHoy).add(1, 'days');
-
         if (ahora.isBefore(inicioHoy)) {
           inicioHoy.subtract(1, 'days');
           finHoy.subtract(1, 'days');
         }
 
+        // Filtrar registros para solo incluir las máquinas de interés
         const registrosFiltrados = dataRegistros.filter(registro => {
+          const celula = registro.name.split("-")[0].trim().toUpperCase().replace(/\s+/g, ' ');
+          return ordenCelulas.includes(celula);
+        }).filter(registro => {
           const fechaHoraRegistro = moment.tz(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss', 'America/Mexico_City');
           return fechaHoraRegistro.isBetween(inicioHoy, finHoy, null, '[]');
         });
@@ -93,12 +70,10 @@ const Totales_Biselado_Tableros = () => {
           acc[celula].push(registro);
           return acc;
         }, {});
-
         setRegistrosAgrupados(registrosAgrupados);
 
         const horas = new Set();
         const acumulados = {};
-
         registrosFiltrados.forEach(registro => {
           horas.add(registro.hour);
           const celula = registro.name.split("-")[0].trim().toUpperCase().replace(/\s+/g, ' ');
@@ -135,7 +110,6 @@ const Totales_Biselado_Tableros = () => {
       vespertino: 0,
       nocturno: 0
     };
-
     registros.forEach(registro => {
       const fechaHoraRegistro = moment.tz(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss', 'America/Mexico_City');
       if (fechaHoraRegistro.isBetween(inicioHoy, moment(inicioHoy).add(8, 'hours'), null, '[)')) {
@@ -146,12 +120,12 @@ const Totales_Biselado_Tableros = () => {
         totales.nocturno += parseInt(registro.hits || 0);
       }
     });
-
     setTotalesPorTurno(totales);
   };
 
   const sumaTotalAcumulados = Object.values(totalesAcumulados).reduce((acc, curr) => acc + curr, 0);
-  const sumaTotalMetas = Object.keys(metasPorMaquina).reduce((acc, celula) => {
+  // Sumar solo las metas de las máquinas que nos interesan
+  const sumaTotalMetas = ordenCelulas.reduce((acc, celula) => {
     return acc + (metasPorMaquina[celula] || 0);
   }, 0);
   const metaMatutinoFinal = sumaTotalMetas * 8;
@@ -247,4 +221,4 @@ const Totales_Biselado_Tableros = () => {
   );
 };
 
-export default Totales_Biselado_Tableros;
+export default Totales_Surtido_Tableros;
