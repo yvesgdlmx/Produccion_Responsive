@@ -1,16 +1,8 @@
 import { useEffect, useState } from "react";
 import clienteAxios from "../../../config/clienteAxios";
-import Navegacion from "../others/Navegacion";
 import moment from 'moment-timezone';
 
-const Totales_Pulido_Tableros = () => {
-  useEffect(() => {
-    const interval = setInterval(() => {
-      window.location.reload();
-    }, 300000); // Actualiza cada 5 minutos
-    return () => clearInterval(interval);
-  }, []);
-
+const Totales_Biselado2_Tableros = () => {
   const [registros, setRegistros] = useState([]);
   const [horasUnicas, setHorasUnicas] = useState([]);
   const [metasPorMaquina, setMetasPorMaquina] = useState({});
@@ -21,28 +13,31 @@ const Totales_Pulido_Tableros = () => {
     vespertino: 0,
     nocturno: 0
   });
+  const [totalGeneral, setTotalGeneral] = useState(0); // Estado para el total general
 
   const ordenCelulas = [
-    "254 IFLEX SRVR",
-    "255 POLISHR 1",
-    "256 POLISHR 2",
-    "257 POLISHR 3",
-    "258 POLISHR 4",
-    "259 POLISHR 5",
-    "260 POLISHR 6",
-    "261 POLISHR 7",
-    "262 POLISHR 8",
-    "265 POLISHR 12",
-    "266 MULTIFLEX 1",
-    "267 MULTIFLEX 2",
-    "268 MULTIFLEX 3",
-    "269 MULTIFLEX 4",
+    "311 EDFGER 12",
+    "313 EDGER 13",
+    "314 EDGER 14",
+    "316 EDGER 15",
+    "317 EDGER 16",
+    "327 EDGER 17",
+    "328 EDGER 18",
+    "329 EDGER 19",
+    "330 EDGER 20",
+    "331 EDGER 21",
+    "332 EDGER 22",
+    "333 EDGER 23",
+    "334 EDGER 24",
+    "312 RAZR",
+    "318 HSE 1",
+    "319 HSE 2"
   ];
 
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const responseMetas = await clienteAxios('/metas/metas-pulidos');
+        const responseMetas = await clienteAxios('/metas/metas-biselados');
         const metas = {};
         if (Array.isArray(responseMetas.data.registros)) {
           responseMetas.data.registros.forEach(meta => {
@@ -53,13 +48,11 @@ const Totales_Pulido_Tableros = () => {
         }
         setMetasPorMaquina(metas);
 
-        const responseRegistros = await clienteAxios('/pulido/pulido/actualdia');
+        const responseRegistros = await clienteAxios('/biselado/biselado/actualdia');
         const dataRegistros = responseRegistros.data.registros || [];
-
         const ahora = moment().tz('America/Mexico_City');
         let inicioHoy = moment().tz('America/Mexico_City').startOf('day').add(6, 'hours').add(30, 'minutes');
         let finHoy = moment(inicioHoy).add(1, 'days');
-
         if (ahora.isBefore(inicioHoy)) {
           inicioHoy.subtract(1, 'days');
           finHoy.subtract(1, 'days');
@@ -78,12 +71,10 @@ const Totales_Pulido_Tableros = () => {
           acc[celula].push(registro);
           return acc;
         }, {});
-
         setRegistrosAgrupados(registrosAgrupados);
 
         const horas = new Set();
         const acumulados = {};
-
         registrosFiltrados.forEach(registro => {
           horas.add(registro.hour);
           const celula = registro.name.split("-")[0].trim().toUpperCase().replace(/\s+/g, ' ');
@@ -103,7 +94,6 @@ const Totales_Pulido_Tableros = () => {
           const momentoFinal = moment(momentoInicial).add(1, 'hour');
           return `${momentoInicial.format('HH:mm')} - ${momentoFinal.format('HH:mm')}`;
         });
-
         setHorasUnicas(horasConFormato);
         setTotalesAcumulados(acumulados);
         calcularTotalesPorTurno(registrosFiltrados, inicioHoy);
@@ -114,13 +104,18 @@ const Totales_Pulido_Tableros = () => {
     cargarDatos();
   }, []);
 
+  useEffect(() => {
+    // Calcula el total general cada vez que cambian los totales acumulados
+    const nuevoTotalGeneral = Object.values(totalesAcumulados).reduce((acc, curr) => acc + curr, 0);
+    setTotalGeneral(nuevoTotalGeneral);
+  }, [totalesAcumulados]);
+
   const calcularTotalesPorTurno = (registros, inicioHoy) => {
     const totales = {
       matutino: 0,
       vespertino: 0,
       nocturno: 0
     };
-
     registros.forEach(registro => {
       const fechaHoraRegistro = moment.tz(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss', 'America/Mexico_City');
       if (fechaHoraRegistro.isBetween(inicioHoy, moment(inicioHoy).add(8, 'hours'), null, '[)')) {
@@ -131,34 +126,33 @@ const Totales_Pulido_Tableros = () => {
         totales.nocturno += parseInt(registro.hits || 0);
       }
     });
-
     setTotalesPorTurno(totales);
   };
 
-  const sumaTotalAcumulados = Object.values(totalesAcumulados).reduce((acc, curr) => acc + curr, 0);
-  const sumaTotalMetas = Object.keys(metasPorMaquina).reduce((acc, celula) => {
+  const sumaTotalAcumulados = ordenCelulas.reduce((acc, celula) => {
+    return acc + (totalesAcumulados[celula] || 0);
+  }, 0);
+
+  const sumaTotalMetas = ordenCelulas.reduce((acc, celula) => {
     return acc + (metasPorMaquina[celula] || 0);
   }, 0);
+
   const metaMatutinoFinal = sumaTotalMetas * 8;
   const metaVespertinoFinal = sumaTotalMetas * 7;
   const metaNocturnoFinal = sumaTotalMetas * 4;
 
   const sumaHitsPorHora = horasUnicas.map(hora => {
     const [horaInicio, horaFin] = hora.split(' - ');
-    return ordenCelulas.reduce((total, celula) => {
-      const registrosCelula = registrosAgrupados[celula] || [];
-      const totalHits = registrosCelula.filter(r => {
-        const hourMoment = moment(r.hour, 'HH:mm:ss');
-        const startMoment = moment(horaInicio, 'HH:mm');
-        const endMoment = moment(horaFin, 'HH:mm');
-        if (startMoment.isAfter(endMoment)) {
-          return hourMoment.isSameOrAfter(startMoment) || hourMoment.isBefore(endMoment);
-        } else {
-          return hourMoment.isSameOrAfter(startMoment) && hourMoment.isBefore(endMoment);
-        }
-      }).reduce((acc, curr) => acc + parseInt(curr.hits || 0), 0);
-      return total + totalHits;
-    }, 0);
+    return Object.values(registrosAgrupados).flat().filter(r => {
+      const hourMoment = moment(r.hour, 'HH:mm:ss');
+      const startMoment = moment(horaInicio, 'HH:mm');
+      const endMoment = moment(horaFin, 'HH:mm');
+      if (startMoment.isAfter(endMoment)) {
+        return hourMoment.isSameOrAfter(startMoment) || hourMoment.isBefore(endMoment);
+      } else {
+        return hourMoment.isSameOrAfter(startMoment) && hourMoment.isBefore(endMoment);
+      }
+    }).reduce((acc, curr) => acc + parseInt(curr.hits || 0), 0);
   });
 
   const claseSumaTotalAcumulados = sumaTotalAcumulados >= (metaMatutinoFinal + metaVespertinoFinal + metaNocturnoFinal) ? "text-green-500" : "text-red-500";
@@ -167,14 +161,14 @@ const Totales_Pulido_Tableros = () => {
     <>
       <div className="w-full px-4">
         <div className="hidden lg:block overflow-x-auto">
-          <table className="min-w-full bg-white border text-lg font-bold">
+          <table className="min-w-full bg-white border">
             <thead>
               <tr className="bg-blue-500 text-white">
-                <th className="py-4 px-6 border-b" style={{ minWidth: '250px' }}>Nombre</th>
-                <th className="py-4 px-6 border-b">Total Acumulado</th>
-                <th className="py-4 px-6 border-b">Meta</th>
+                <th className="py-2 px-4 border-b" style={{ minWidth: '250px' }}>Nombre</th>
+                <th className="py-2 px-4 border-b">Total Acumulado</th>
+                <th className="py-2 px-4 border-b">Meta</th>
                 {horasUnicas.map((hora, index) => (
-                  <th key={index} className="py-4 px-6 border-b whitespace-nowrap">{hora}</th>
+                  <th key={index} className="py-2 px-4 border-b whitespace-nowrap">{hora}</th>
                 ))}
               </tr>
             </thead>
@@ -188,9 +182,9 @@ const Totales_Pulido_Tableros = () => {
                 const bgColor = index % 2 === 0 ? 'bg-gray-200' : 'bg-white';
                 return (
                   <tr key={index} className={`font-semibold text-gray-700 ${bgColor}`}>
-                    <td className="py-4 px-6 border-b font-bold" style={{ minWidth: '250px' }}>{celula}</td>
-                    <td className={`py-4 px-6 border-b font-bold ${claseTotalAcumulado}`}>{totalAcumulado}</td>
-                    <td className="py-4 px-6 border-b font-bold">{meta || 'No definida'}</td>
+                    <td className="py-2 px-4 border-b font-bold" style={{ minWidth: '250px' }}>{celula}</td>
+                    <td className={`py-2 px-4 border-b font-bold ${claseTotalAcumulado}`}>{totalAcumulado}</td>
+                    <td className="py-2 px-4 border-b font-bold">{meta || 'No definida'}</td>
                     {horasUnicas.map((hora, idx) => {
                       const [horaInicio, horaFin] = hora.split(' - ');
                       const totalHits = registrosCelula.filter(r => {
@@ -205,7 +199,7 @@ const Totales_Pulido_Tableros = () => {
                       }).reduce((acc, curr) => acc + parseInt(curr.hits || 0), 0);
                       const claseHitsIndividual = totalHits >= meta ? "text-green-500" : "text-red-500";
                       return (
-                        <td key={idx} className={`font-bold py-4 px-6 border-b ${claseHitsIndividual}`}>
+                        <td key={idx} className={`font-bold py-2 px-4 border-b ${claseHitsIndividual}`}>
                           {totalHits}
                         </td>
                       );
@@ -214,22 +208,26 @@ const Totales_Pulido_Tableros = () => {
                 );
               })}
               <tr className="font-semibold bg-green-200 text-gray-700">
-                <td className="py-4 px-6 border-b font-bold" style={{ minWidth: '250px' }}>Totales</td>
-                <td className={`py-4 px-6 border-b fw font-bold ${claseSumaTotalAcumulados}`}>{sumaTotalAcumulados}</td>
-                <td className="py-4 px-6 border-b fw font-bold">{sumaTotalMetas}</td>
+                <td className="py-2 px-4 border-b font-bold" style={{ minWidth: '250px' }}>Subtotal</td>
+                <td className={`py-2 px-4 border-b fw font-bold ${claseSumaTotalAcumulados}`}>{sumaTotalAcumulados}</td>
+                <td className="py-2 px-4 border-b fw font-bold">{sumaTotalMetas}</td>
                 {sumaHitsPorHora.map((sumaHits, index) => {
                   const claseSumaHits = sumaHits >= sumaTotalMetas ? "text-green-500" : "text-red-500";
                   return (
-                    <td key={index} className={`font-bold py-4 px-6 border-b fw ${claseSumaHits}`}>{sumaHits}</td>
+                    <td key={index} className={`font-bold py-2 px-4 border-b fw ${claseSumaHits}`}>{sumaHits}</td>
                   );
                 })}
               </tr>
             </tbody>
           </table>
         </div>
+        {/* Mostrar total general */}
+        <div className="mt-4 text-xl font-bold text-white">
+          Total General: {totalGeneral}
+        </div>
       </div>
     </>
   );
 };
 
-export default Totales_Pulido_Tableros;
+export default Totales_Biselado2_Tableros;

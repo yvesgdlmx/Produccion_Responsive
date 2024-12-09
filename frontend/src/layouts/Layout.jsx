@@ -128,17 +128,17 @@ const Layout = () => {
                                     <ul className="py-1 text-slate-700">
                                         <li>
                                             <Link to={'/tableros_tallado'} onClick={handleMenuItemClick}>
-                                                <p className="block px-4 py-2 hover:bg-gray-100">Bloqueo de tallado</p>
+                                                <p className="block px-4 py-2 hover:bg-gray-100">Tableros de tallado</p>
                                             </Link>
                                         </li>
                                         <li>
                                             <Link to={'/tableros_terminado'} onClick={handleMenuItemClick}>
-                                                <p className="block px-4 py-2 hover:bg-gray-100">Bloqueo de terminado</p>
+                                                <p className="block px-4 py-2 hover:bg-gray-100">Tableros de terminado</p>
                                             </Link>
                                         </li>
                                         <li>
                                             <Link to={'/tableros_tallado_terminado'} onClick={handleMenuItemClick}>
-                                                <p className="block px-4 py-2 hover:bg-gray-100">Bloqueo de tallado y terminado</p>
+                                                <p className="block px-4 py-2 hover:bg-gray-100">Tableros de tallado y terminado</p>
                                             </Link>
                                         </li>
                                     </ul>

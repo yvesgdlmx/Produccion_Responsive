@@ -60,7 +60,6 @@ const Totales_Pulido_Maquina = () => {
   }, []);
 
   const [seccionesAbiertas, setSeccionesAbiertas] = useState({});
-
   const toggleSeccion = (celula) => {
     setSeccionesAbiertas(prev => ({ ...prev, [celula]: !prev[celula] }));
   };
@@ -84,6 +83,7 @@ const Totales_Pulido_Maquina = () => {
     "258 POLISHR 4",
     "259 POLISHR 5",
     "260 POLISHR 6",
+    "261 POLISHR 7",
     "262 POLISHR 8",
     "265 POLISHR 12",
     "266 MULTIFLEX 1",
@@ -137,12 +137,10 @@ const Totales_Pulido_Maquina = () => {
           acc[celula].push(registro);
           return acc;
         }, {});
-
         setRegistrosAgrupados(registrosAgrupados);
 
         const horas = new Set();
         const acumulados = {};
-
         registrosFiltrados.forEach(registro => {
           horas.add(registro.hour);
           const celula = registro.name.split("-")[0].trim().toUpperCase().replace(/\s+/g, ' ');
@@ -163,7 +161,6 @@ const Totales_Pulido_Maquina = () => {
           const momentoFinal = moment(momentoInicial).add(1, 'hour');
           return `${horaInicial}:${minutos} - ${momentoFinal.format('HH:mm')}`;
         });
-
         setHorasUnicas(horasConFormato);
         setTotalesAcumulados(acumulados);
         calcularTotalesPorTurno(registrosFiltrados, inicioHoy);
@@ -171,7 +168,6 @@ const Totales_Pulido_Maquina = () => {
         console.error("Error al cargar los datos:", error);
       }
     };
-
     cargarDatos();
   }, []);
 
@@ -181,18 +177,16 @@ const Totales_Pulido_Maquina = () => {
       vespertino: 0,
       nocturno: 0
     };
-
     registros.forEach(registro => {
       const fechaHoraRegistro = moment.tz(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss', 'America/Mexico_City');
       if (fechaHoraRegistro.isBetween(inicioHoy, moment(inicioHoy).add(8, 'hours'), null, '[)')) {
-        totales.matutino += registro.hits;
+        totales.matutino += parseInt(registro.hits || 0);
       } else if (fechaHoraRegistro.isBetween(moment(inicioHoy).add(8, 'hours'), moment(inicioHoy).add(15, 'hours'), null, '[)')) {
-        totales.vespertino += registro.hits;
+        totales.vespertino += parseInt(registro.hits || 0);
       } else {
-        totales.nocturno += registro.hits;
+        totales.nocturno += parseInt(registro.hits || 0);
       }
     });
-
     setTotalesPorTurno(totales);
   };
 
@@ -205,20 +199,24 @@ const Totales_Pulido_Maquina = () => {
         nocturno: 0
       };
     });
-
     registros.forEach(registro => {
       const celula = registro.name.split("-")[0].trim().toUpperCase().replace(/\s+/g, ' ');
+
+      // Verifica si la célula está en el objeto totales
+      if (!totales[celula]) {
+        console.warn(`Célula no encontrada en totales: ${celula}`);
+        return;
+      }
+
       const fechaHoraRegistro = moment.tz(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss', 'America/Mexico_City');
-      
       if (fechaHoraRegistro.isBetween(inicioHoy, moment(inicioHoy).add(8, 'hours'), null, '[)')) {
-        totales[celula].matutino += parseInt(registro.hits || 0);
+        totales[celula].matutino += parseInt(registro.hits || 0, 10);
       } else if (fechaHoraRegistro.isBetween(moment(inicioHoy).add(8, 'hours'), moment(inicioHoy).add(15, 'hours'), null, '[)')) {
-        totales[celula].vespertino += parseInt(registro.hits || 0);
+        totales[celula].vespertino += parseInt(registro.hits || 0, 10);
       } else {
-        totales[celula].nocturno += parseInt(registro.hits || 0);
+        totales[celula].nocturno += parseInt(registro.hits || 0, 10);
       }
     });
-
     return totales;
   };
 
@@ -226,29 +224,28 @@ const Totales_Pulido_Maquina = () => {
   const sumaTotalMetas = Object.keys(metasPorMaquina).reduce((acc, celula) => {
     return acc + (metasPorMaquina[celula] || 0);
   }, 0);
-
   const metaMatutinoFinal = sumaTotalMetas * 8;
   const metaVespertinoFinal = sumaTotalMetas * 7;
   const metaNocturnoFinal = sumaTotalMetas * 9;
-
   const sumaHitsPorHora = horasUnicas.map(hora => {
     const [horaInicio, horaFin] = hora.split(' - ');
-    return Object.values(registrosAgrupados).flat().filter(r => {
-      const hourMoment = moment(r.hour, 'HH:mm:ss');
-      const startMoment = moment(horaInicio, 'HH:mm');
-      const endMoment = moment(horaFin, 'HH:mm');
-      
-      if (startMoment.isAfter(endMoment)) {
-        // Caso especial para el intervalo que cruza la medianoche
-        return hourMoment.isSameOrAfter(startMoment) || hourMoment.isBefore(endMoment);
-      } else {
-        return hourMoment.isSameOrAfter(startMoment) && hourMoment.isBefore(endMoment);
-      }
-    }).reduce((acc, curr) => acc + parseInt(curr.hits || 0), 0);
+    return ordenCelulas.reduce((total, celula) => {
+      const registrosCelula = registrosAgrupados[celula] || [];
+      const totalHits = registrosCelula.filter(r => {
+        const hourMoment = moment(r.hour, 'HH:mm:ss');
+        const startMoment = moment(horaInicio, 'HH:mm');
+        const endMoment = moment(horaFin, 'HH:mm');
+        if (startMoment.isAfter(endMoment)) {
+          return hourMoment.isSameOrAfter(startMoment) || hourMoment.isBefore(endMoment);
+        } else {
+          return hourMoment.isSameOrAfter(startMoment) && hourMoment.isBefore(endMoment);
+        }
+      }).reduce((acc, curr) => acc + parseInt(curr.hits || 0), 0);
+      return total + totalHits;
+    }, 0);
   });
 
   const claseSumaTotalAcumulados = sumaTotalAcumulados >= (metaMatutinoFinal + metaVespertinoFinal + metaNocturnoFinal) ? "text-green-500" : "text-red-500";
-
   const getClassName = (hits, metaPorTurno) => {
     return hits >= metaPorTurno ? "text-green-500" : "text-red-500";
   };
@@ -256,7 +253,7 @@ const Totales_Pulido_Maquina = () => {
   return (
     <>
       <div className="max-w-screen-xl">
-      {/* Diseño tipo card para pantallas pequeñas y medianas */}
+        {/* Diseño tipo card para pantallas pequeñas y medianas */}
         <div className="lg:hidden mt-4">
           {ordenCelulas.map((celula, index) => {
             const registrosCelula = registrosAgrupados[celula] || [];
@@ -265,17 +262,14 @@ const Totales_Pulido_Maquina = () => {
             const metaAcumulada = meta * horasUnicas.length;
             const claseTotalAcumulado = totalAcumulado >= metaAcumulada ? "text-green-500" : "text-red-500";
             const totalesTurno = totalesPorTurnoYMaquina[celula];
-
             // Calcular horas transcurridas en cada turno
             const horasMatutino = Math.min(moment().diff(moment().startOf('day').add(6, 'hours').add(30, 'minutes'), 'hours'), 8);
             const horasVespertino = Math.min(Math.max(moment().diff(moment().startOf('day').add(14, 'hours').add(30, 'minutes'), 'hours'), 0), 7);
             const horasNocturno = Math.min(Math.max(moment().diff(moment().startOf('day').add(21, 'hours').add(30, 'minutes'), 'hours'), 0), 9);
-
             // Calcular metas ajustadas según horas transcurridas
             const metaMatutino = meta * horasMatutino;
             const metaVespertino = meta * horasVespertino;
             const metaNocturno = meta * horasNocturno;
-
             return (
               <SeccionMenu 
                 key={index}
@@ -362,17 +356,14 @@ const Totales_Pulido_Maquina = () => {
                 const totalAcumulado = totalesAcumulados[celula] || 0;
                 const meta = metasPorMaquina[celula] || 0;
                 const totalesTurno = totalesPorTurnoYMaquina[celula];
-                
                 // Calcular horas transcurridas en cada turno
                 const horasMatutino = Math.min(moment().diff(moment().startOf('day').add(6, 'hours').add(30, 'minutes'), 'hours'), 8);
                 const horasVespertino = Math.min(Math.max(moment().diff(moment().startOf('day').add(14, 'hours').add(30, 'minutes'), 'hours'), 0), 7);
                 const horasNocturno = Math.min(Math.max(moment().diff(moment().startOf('day').add(21, 'hours').add(30, 'minutes'), 'hours'), 0), 9);
-
                 // Calcular metas ajustadas según horas transcurridas
                 const metaMatutino = meta * horasMatutino;
                 const metaVespertino = meta * horasVespertino;
                 const metaNocturno = meta * horasNocturno;
-
                 const bgColor = index % 2 === 0 ? 'bg-gray-200' : 'bg-white';
                 return (
                   <tr key={index} className={`font-semibold text-gray-700 ${bgColor}`}>
@@ -452,7 +443,6 @@ const Totales_Pulido_Maquina = () => {
                 <span className="text-lg font-bold text-gray-800">{metaMatutinoFinal}</span>
               </div>
             </div>
-
             <div className="bg-white p-4 rounded-lg shadow-md">
               <h3 className="text-lg font-bold text-gray-800 mb-2">Turno Vespertino</h3>
               <div className="flex justify-between items-center">
@@ -466,7 +456,6 @@ const Totales_Pulido_Maquina = () => {
                 <span className="text-lg font-bold text-gray-800">{metaVespertinoFinal}</span>
               </div>
             </div>
-
             <div className="bg-white p-4 rounded-lg shadow-md">
               <h3 className="text-lg font-bold text-gray-800 mb-2">Turno Nocturno</h3>
               <div className="flex justify-between items-center">
@@ -481,8 +470,7 @@ const Totales_Pulido_Maquina = () => {
               </div>
             </div>
           </div>
-          
-          {/* Diseño para pantallas grandes */}
+          {/* Diseño original para pantallas grandes */}
           <div className='hidden lg:flex lg:flex-row justify-around'>
             <div className="bg-white p-2 px-10 rounded-lg">
               <p className="text-gray-600 text-base">

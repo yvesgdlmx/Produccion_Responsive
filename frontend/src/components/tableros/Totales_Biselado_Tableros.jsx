@@ -36,22 +36,6 @@ const Totales_Biselado_Tableros = () => {
     "308 EDGER 9",
     "309 EDGER 10",
     "310 EDGER 11",
-    "311 EDFGER 12",
-    "313 EDGER 13",
-    "314 EDGER 14",
-    "316 EDGER 15",
-    "317 EDGER 16",
-    "327 EDGER 17",
-    "328 EDGER 18",
-    "329 EDGER 19",
-    "330 EDGER 20",
-    "331 EDGER 21",
-    "332 EDGER 22",
-    "333 EDGER 23",
-    "334 EDGER 24",
-    "312 RAZR",
-    "318 HSE 1",
-    "319 HSE 2"
   ];
 
   useEffect(() => {
@@ -150,8 +134,10 @@ const Totales_Biselado_Tableros = () => {
     setTotalesPorTurno(totales);
   };
 
-  const sumaTotalAcumulados = Object.values(totalesAcumulados).reduce((acc, curr) => acc + curr, 0);
-  const sumaTotalMetas = Object.keys(metasPorMaquina).reduce((acc, celula) => {
+  const sumaTotalAcumulados = ordenCelulas.reduce((acc, celula) => {
+    return acc + (totalesAcumulados[celula] || 0);
+  }, 0);
+  const sumaTotalMetas = ordenCelulas.reduce((acc, celula) => {
     return acc + (metasPorMaquina[celula] || 0);
   }, 0);
   const metaMatutinoFinal = sumaTotalMetas * 8;
@@ -229,7 +215,7 @@ const Totales_Biselado_Tableros = () => {
                 );
               })}
               <tr className="font-semibold bg-green-200 text-gray-700">
-                <td className="py-2 px-4 border-b font-bold" style={{ minWidth: '250px' }}>Totales</td>
+                <td className="py-2 px-4 border-b font-bold" style={{ minWidth: '250px' }}>Subtotal</td>
                 <td className={`py-2 px-4 border-b fw font-bold ${claseSumaTotalAcumulados}`}>{sumaTotalAcumulados}</td>
                 <td className="py-2 px-4 border-b fw font-bold">{sumaTotalMetas}</td>
                 {sumaHitsPorHora.map((sumaHits, index) => {

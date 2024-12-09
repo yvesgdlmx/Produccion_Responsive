@@ -1,10 +1,12 @@
+import moment from 'moment-timezone';
 import TrabajosNuevos from '../models/TrabajosNuevos.js';
+import { Op } from "sequelize";
 
 const obtenerDatosTrabajosNuevos = async (req, res) => {
     try {
         // Encuentra la fecha más reciente en la base de datos
         const fechaMasReciente = await TrabajosNuevos.max('fecha');
-        console.log("Fecha más reciente encontrada:", fechaMasReciente);
+        console.log("Fecha más reciente encontrada en bruto:", fechaMasReciente);
 
         if (!fechaMasReciente) {
             return res.status(404).json({
@@ -15,16 +17,19 @@ const obtenerDatosTrabajosNuevos = async (req, res) => {
             });
         }
 
-        // Convertir la fecha a un formato adecuado para la comparación
-        const fechaFormateada = new Date(fechaMasReciente).toISOString().split('T')[0];
+        // Convierte la fecha a la zona horaria de México y formatea
+        const fechaFormateada = moment(fechaMasReciente).format('YYYY-MM-DD');
         console.log("Fecha formateada para la consulta:", fechaFormateada);
 
         // Obtén todos los registros con la fecha más reciente
         const registros = await TrabajosNuevos.findAll({
             where: {
-                fecha: fechaFormateada
+                fecha: {
+                    [Op.gte]: new Date(`${fechaFormateada}T00:00:00`),
+                    [Op.lt]: new Date(`${fechaFormateada}T23:59:59.999`)
+                }
             },
-            order: [['hora', 'ASC']], // Ordena por hora de manera ascendente
+            order: [['hora', 'ASC']],
             raw: true
         });
 

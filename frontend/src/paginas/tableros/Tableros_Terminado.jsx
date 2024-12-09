@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Totales_Terminado_Tableros from '../../components/tableros/Totales_Terminado_Tableros';
 import Totales_Biselado_Tableros from '../../components/tableros/Totales_Biselado_Tableros';
 import Totales_Surtido_Tableros from '../../components/tableros/Totales_Surtido_Tableros';
+import Totales_Biselado2_Tableros from '../../components/tableros/Totales_Biselado2_Tableros';
 
 const Tableros_Terminado = () => {
-  const componentes = ['TotalesSurtido', 'TotalesTerminado', 'TotalesBiselado'];
+  const componentes = ['TotalesTerminado', 'TotalesBiselado', 'TotalesBiselado2'];
   const [componenteActivo, setComponenteActivo] = useState(componentes[0]);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [contador, setContador] = useState(10);
@@ -57,14 +58,14 @@ const Tableros_Terminado = () => {
     const currentIndex = componentes.indexOf(componenteActivo);
     const newIndex = (currentIndex - 1 + componentes.length) % componentes.length;
     setComponenteActivo(componentes[newIndex]);
-    setContador(10); // Reinicia el contador
+    setContador(30); // Reinicia el contador
   };
 
   const cambiarComponenteSiguiente = () => {
     const currentIndex = componentes.indexOf(componenteActivo);
     const newIndex = (currentIndex + 1) % componentes.length;
     setComponenteActivo(componentes[newIndex]);
-    setContador(10); // Reinicia el contador
+    setContador(30); // Reinicia el contador
   };
 
   return (
@@ -117,9 +118,9 @@ const Tableros_Terminado = () => {
             Cambio en: {contador}s
           </div>
         )}
-        {componenteActivo === 'TotalesSurtido' && <Totales_Surtido_Tableros/>}
         {componenteActivo === 'TotalesTerminado' && <Totales_Terminado_Tableros/>}
         {componenteActivo === 'TotalesBiselado' && <Totales_Biselado_Tableros />}
+        {componenteActivo === 'TotalesBiselado2' && <Totales_Biselado2_Tableros />}
       </div>
     </div>
   );
