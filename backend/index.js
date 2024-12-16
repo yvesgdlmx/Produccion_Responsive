@@ -21,6 +21,7 @@ import historialRoutes from './routes/historialRoutes.js'
 import ReportesProduccionRoutes from './routes/ReportesProduccionRoutes.js'
 import reportesAntiguedadRoutes from './routes/reportesAntiguedadRoutes.js'
 import reportesTrabajosNuevosRoutes from './routes/reportesTrabajosNuevosRoutes.js'
+import wipTotalRoutes from './routes/wipTotalRoutes.js'
 
 const app = express();
 app.use(express.json());
@@ -77,6 +78,7 @@ app.use('/api/login', usuarioRoutes)
 app.use('/api/reportes', ReportesProduccionRoutes)
 app.use('/api/reportes', reportesAntiguedadRoutes)
 app.use('/api/reportes', reportesTrabajosNuevosRoutes)
+app.use('/api/reportes', wipTotalRoutes)
 
 const PORT = process.env.PORT || 3000;
 const servidor = app.listen(PORT, () => {
