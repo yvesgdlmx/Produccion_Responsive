@@ -132,19 +132,19 @@ const Totales_AR_Estacion = () => {
                 <div className='flex flex-col md:flex-row justify-around mt-4 font-semibold mb-4'>
                     <div className="bg-white p-2 px-10 rounded-lg mb-2 md:mb-0 shadow-md">
                         <p className="text-gray-600 text-sm md:text-base">
-                            Total Matutino: 
+                            Total Matutino Acumulado: 
                             <span className="ml-1 font-bold text-gray-700">{totalesPorTurno.matutino}</span>
                         </p>
                     </div>
                     <div className="bg-white p-2 px-10 rounded-lg mb-2 md:mb-0 shadow-md">
                         <p className="text-gray-600 text-sm md:text-base">
-                            Total Vespertino: 
+                            Total Vespertino Acumulado: 
                             <span className="ml-1 font-bold text-gray-700">{totalesPorTurno.vespertino}</span>
                         </p>
                     </div>
                     <div className="bg-white p-2 px-10 rounded-lg shadow-md">
                         <p className="text-gray-600 text-sm md:text-base">
-                            Total Nocturno: 
+                            Total Nocturno Acumulado: 
                             <span className="ml-1 font-bold text-gray-700">{totalesPorTurno.nocturno}</span>
                         </p>
                     </div>

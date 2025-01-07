@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth'; // Asegúrate de que la ruta sea correcta
+import useAuth from '../../hooks/useAuth';
 
 const Layout = () => {
     const [menuVisible, setMenuVisible] = useState('');
@@ -80,7 +80,7 @@ const Layout = () => {
                                     <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg">
                                         <ul className="py-1 text-slate-700">
                                             <li>
-                                                <Link to={'/surtido_metas'} onClick={handleMenuItemClick}>
+                                                <Link to={'/manuales_metas'} onClick={handleMenuItemClick}>
                                                     <p className="block px-4 py-2 hover:bg-gray-100">Manuales</p>
                                                 </Link>
                                             </li>
@@ -194,6 +194,11 @@ const Layout = () => {
                                         <li>
                                             <Link to={'/reportes_wip_diario'} onClick={handleMenuItemClick}>
                                                 <p className="block px-4 py-2 hover:bg-gray-100">Reporte de wip diario</p>
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link to={'/reportes_trabajos_enviados'} onClick={handleMenuItemClick}>
+                                                <p className="block px-4 py-2 hover:bg-gray-100">Trabajos Enviados</p>
                                             </Link>
                                         </li>
                                     </ul>
@@ -314,6 +319,15 @@ const Layout = () => {
                                                 className="block py-2 px-3 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                                             >
                                             Reportes de wip diario
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <Link 
+                                                to={'/reportes_trabajos_enviados'} 
+                                                onClick={handleMenuItemClick} 
+                                                className="block py-2 px-3 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                                            >
+                                            Trabajos enviados
                                             </Link>
                                         </li>
                                     </ul>
