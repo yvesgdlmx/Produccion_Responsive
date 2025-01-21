@@ -76,6 +76,7 @@ const Totales_Pulido_Maquina = () => {
   const ordenCelulas = [
     "254 IFLEX SRVR",
     "255 POLISHR 1",
+    "256 POLISHR 2",
     "257 POLISHR 3",
     "258 POLISHR 4",
     "259 POLISHR 5",
@@ -216,9 +217,9 @@ const Totales_Pulido_Maquina = () => {
   }, 0);
 
   // Calcular metas finales por turno
-  const metaMatutinoFinal = sumaTotalMetas * 8;
-  const metaVespertinoFinal = sumaTotalMetas * 7;
-  const metaNocturnoFinal = sumaTotalMetas * 9;
+  const metaMatutinoFinal = sumaTotalMetas * 7;
+  const metaVespertinoFinal = sumaTotalMetas * 6;
+  const metaNocturnoFinal = sumaTotalMetas * 7;
 
   const sumaHitsPorHora = horasUnicas.map(hora => {
     const [horaInicio, horaFin] = hora.split(' - ');

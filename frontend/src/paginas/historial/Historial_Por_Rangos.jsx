@@ -3,7 +3,7 @@ import clienteAxios from "../../../config/clienteAxios";
 import moment from "moment";
 
 const estaciones = {
-  "Surtido": ["19 LENS LOG", "20 LENS LOG-FIN"],
+  "Surtido": ["19 LENS LOG", "20 LENS LOG"],
   "Bloqueo de tallado": ["220 SRFBLK 1", "221 SRFBLK 2", "222 SRFBLK 3", "223 SRFBLK 4", "224 SRFBLK 5", "225 SRFBLK 6"],
   "Generado": ["241 GENERATOR 1", "242 GENERATOR 2", "245 ORBIT 1 LA", "246 ORBIT 2 LA", "244 ORBIT 3 LA", "243 ORBIT 4 LA", "247 SCHNIDER 1", "248 SCHNIDER 2"],
   "Pulido": ["255 POLISHR 1", "257 POLISHR 3", "259 POLISHR 5", "262 POLISHR 8", "265 POLISHR 12", "266 MULTIFLEX 1", "267 MULTIFLEX 2", "268 MULTIFLEX 3", "269 MULTIFLEX 4", "254 IFLEX SRVR"],
@@ -13,6 +13,12 @@ const estaciones = {
   "Bloqueo de terminado": ["280 FINBLKR 1", "281 FINBLKR 2", "282 FINBLKR 3"],
   "Biselado": ["298 DOUBLER", "299 BISPHERA", "300 EDGER 1", "301 EDGER 2", "302 EDGER 3", "303 EDGER 4", "304 EDGER 5", "305 EDGER 6", "306 EDGER 7", "307 EDGER 8", "308 EDGER 9", "309 EDGER 10", "310 EDGER 11", "311 EDFGER 12", "313 EDGER 13", "314 EDGER 14", "316 EDGER 15", "317 EDGER 16", "327 EDGER 17", "328 EDGER 18", "329 EDGER 19", "330 EDGER 20", "331 EDGER 21", "332 EDGER 22", "333 EDGER 23", "334 EDGER 24", "312 RAZR", "318 HSE 1", "319 HSE 2"],
   "Producción": ["32 JOB COMPLETE"],
+};
+
+// Mapeo de nombres
+const nombreMostrar = {
+  "19 LENS LOG": "19 LENS LOG SF",
+  "20 LENS LOG": "20 LENS LOG FIN"
 };
 
 const Historial_Por_Rangos = () => {
@@ -34,14 +40,11 @@ const Historial_Por_Rangos = () => {
       try {
         const fechaInicio = moment(`${anio}-${mes}-${diaInicio} 06:30`);
         const fechaFin = moment(`${anio}-${mes}-${diaFin} 06:30`).add(1, 'days');
-
         const { data } = await clienteAxios(`/historial/historial-3/${anio}/${mes}/${diaInicio}/${moment(fechaFin).format('DD')}`);
-
         const registrosFiltrados = data.registros.filter(registro => {
           const fechaHora = moment(`${registro.fecha} ${registro.hour}`);
           return fechaHora.isSameOrAfter(fechaInicio) && fechaHora.isBefore(fechaFin);
         });
-
         console.log("Datos filtrados:", registrosFiltrados);
         setRegistros(registrosFiltrados);
       } catch (error) {
@@ -49,7 +52,6 @@ const Historial_Por_Rangos = () => {
         setRegistros([]);
       }
     };
-
     obtenerRegistros();
   }, [anio, mes, diaInicio, diaFin]);
 
@@ -106,7 +108,6 @@ const Historial_Por_Rangos = () => {
           <p className="md:hidden text-center mb-2 text-sm text-gray-600">
             Rango de Fecha: {rangoFecha}
           </p>
-          {/* Vista para pantallas grandes */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full bg-white border border-gray-300 shadow-lg rounded-lg table-fixed">
               <thead className="bg-blue-500 text-white">
@@ -119,9 +120,10 @@ const Historial_Por_Rangos = () => {
               <tbody>
                 {registrosEstacion.map((registro, index) => {
                   const maquina = maquinas[index];
+                  const nombreMostrarMaquina = nombreMostrar[maquina] || maquina; // Usa el nombre mapeado si existe
                   return (
                     <tr key={index} className="bg-white even:bg-gray-100">
-                      <td className="w-1/3 py-2 px-4 border-b text-center">{maquina}</td>
+                      <td className="w-1/3 py-2 px-4 border-b text-center">{nombreMostrarMaquina}</td>
                       <td className="w-1/3 py-2 px-4 border-b text-center">{rangoFecha}</td>
                       <td className="w-1/3 py-2 px-4 border-b text-center">{registro.hits}</td>
                     </tr>
@@ -144,7 +146,6 @@ const Historial_Por_Rangos = () => {
               </tbody>
             </table>
           </div>
-          {/* Vista para dispositivos móviles */}
           <div className="md:hidden bg-white border border-gray-200 rounded-lg shadow-md overflow-hidden">
             <div className="bg-blue-500 text-white p-3">
               <h3 className="text-lg font-semibold">{nombreEstacion}</h3>
@@ -152,9 +153,10 @@ const Historial_Por_Rangos = () => {
             <div className="p-4 space-y-4">
               {registrosEstacion.map((registro, index) => {
                 const maquina = maquinas[index];
+                const nombreMostrarMaquina = nombreMostrar[maquina] || maquina; // Usa el nombre mapeado si existe
                 return (
                   <div key={index} className="flex justify-between items-center border-b border-gray-200 pb-2">
-                    <span className="font-medium text-gray-700">{maquina}</span>
+                    <span className="font-medium text-gray-700">{nombreMostrarMaquina}</span>
                     <div className="text-right">
                       <span className="block">{registro.hits}</span>
                       <span className="text-xs text-gray-500">Hits</span>

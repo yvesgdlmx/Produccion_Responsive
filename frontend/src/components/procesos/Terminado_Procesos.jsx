@@ -83,9 +83,9 @@ const Terminado_Procesos = () => {
         setHitsVespertino(hitsVespertino);
         setHitsNocturno(hitsNocturno);
 
-        const horasMatutino = 8; // 8 horas para el turno matutino
-        const horasVespertino = 7; // 7 horas para el turno vespertino
-        const horasNocturno = 9; // 8 horas para el turno nocturno
+        const horasMatutino = 7; // 8 horas para el turno matutino
+        const horasVespertino = 6; // 7 horas para el turno vespertino
+        const horasNocturno = 7; // 8 horas para el turno nocturno
         setMetaMatutino(horasMatutino * sumaMetas);
         setMetaVespertino(horasVespertino * sumaMetas);
         setMetaNocturno(horasNocturno * sumaMetas);
@@ -120,7 +120,7 @@ const Terminado_Procesos = () => {
       <div className='flex items-center justify-between py-4 px-2 border-2'>
         <p className='font-bold text-gray-700 xs:text-sm md:text-md'>Último registro: <span className='font-semibold xs:text-sm md:text-md'>{ultimaHora} - {siguienteHora}</span></p>
         <p className='font-bold text-gray-700 xs:text-sm md:text-md'>Trabajos: <span className={meta > totalHits ? "text-red-700" : "text-green-700"}>{totalHits}</span></p>
-        <p className='font-bold text-gray-700 xs:text-sm md:text-md'>Meta: <span className='font-semibold xs:text-sm md:text-md'>{meta}</span></p>
+        <p className='font-bold text-gray-700 xs:text-sm md:text-md'>Meta en vivo: <span className='font-semibold xs:text-sm md:text-md'>{meta}</span></p>
       </div>
       <div className='flex items-center justify-between py-4 px-2 border-2'>
         <p className='font-bold text-gray-700 xs:text-sm md:text-md'>Matutino: <span className={getClassName(hitsMatutino, metaMatutino)}>{hitsMatutino}</span></p>

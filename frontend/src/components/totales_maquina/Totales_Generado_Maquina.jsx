@@ -76,6 +76,7 @@ const Totales_Generado_Maquina = () => {
   const ordenCelulas = [
     "241 GENERATOR 1",
     "242 GENERATOR 2",
+    "250 GENERATOR 3",
     "245 ORBIT 1 LA",
     "246 ORBIT 2 LA",
     "244 ORBIT 3 LA",
@@ -207,9 +208,9 @@ const Totales_Generado_Maquina = () => {
   }, 0);
 
   // Calcular metas finales por turno
-  const metaMatutinoFinal = sumaTotalMetas * 8;
-  const metaVespertinoFinal = sumaTotalMetas * 7;
-  const metaNocturnoFinal = sumaTotalMetas * 9;
+  const metaMatutinoFinal = sumaTotalMetas * 7;
+  const metaVespertinoFinal = sumaTotalMetas * 6;
+  const metaNocturnoFinal = sumaTotalMetas * 7;
 
   const sumaHitsPorHora = horasUnicas.map(hora => {
     const [horaInicio, horaFin] = hora.split(' - ');
