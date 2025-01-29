@@ -6,6 +6,7 @@ const Layout = () => {
     const [menuVisible, setMenuVisible] = useState('');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const menuRefs = {
+        finanzas: useRef(null),
         metas: useRef(null),
         tableros: useRef(null),
         historial: useRef(null),
@@ -72,6 +73,23 @@ const Layout = () => {
                             <p>Producción</p>
                         </Link>
                         {auth && auth.id && ( // Mostrar solo si está autenticado
+                            <>
+                            <div className="relative" ref={menuRefs.finanzas}>
+                                <button onClick={() => toggleMenu('finanzas')} className="hover:text-gray-900 focus:outline-none uppercase">
+                                    Finanzas
+                                </button>
+                                {menuVisible === 'finanzas' && (
+                                    <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded shadow-lg">
+                                        <ul className="py-1 text-slate-700">
+                                            <li>
+                                                <Link to={'/finanzas_facturas'} onClick={handleMenuItemClick}>
+                                                    <p className="block px-4 py-2 hover:bg-gray-100">Facturas</p>
+                                                </Link>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
                             <div className="relative" ref={menuRefs.metas}>
                                 <button onClick={() => toggleMenu('metas')} className="hover:text-gray-900 focus:outline-none uppercase">
                                     Metas
@@ -118,6 +136,7 @@ const Layout = () => {
                                     </div>
                                 )}
                             </div>
+                            </>
                         )}
                         <div className="relative" ref={menuRefs.tableros}>
                             <button onClick={() => toggleMenu('tableros')} className="hover:text-gray-900 focus:outline-none uppercase">

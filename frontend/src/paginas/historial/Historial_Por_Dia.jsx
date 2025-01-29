@@ -5,7 +5,7 @@ import moment from "moment";
 const estaciones = {
   "Surtido": ["19 LENS LOG", "20 LENS LOG"],
   "Bloqueo de tallado": ["220 SRFBLK 1", "221 SRFBLK 2", "222 SRFBLK 3", "223 SRFBLK 4", "224 SRFBLK 5", "225 SRFBLK 6"],
-  "Generado": ["241 GENERATOR 1", "242 GENERATOR 2", "245 ORBIT 1 LA", "246 ORBIT 2 LA", "244 ORBIT 3 LA", "243 ORBIT 4 LA", "247 SCHNIDER 1", "248 SCHNIDER 2"],
+  "Generado": ["241 GENERATOR 1", "242 GENERATOR 2", "250 GENERATOR 3", "245 ORBIT 1 LA", "246 ORBIT 2 LA", "244 ORBIT 3 LA", "243 ORBIT 4 LA", "247 SCHNIDER 1", "248 SCHNIDER 2"],
   "Pulido": ["255 POLISHR 1", "257 POLISHR 3", "259 POLISHR 5", "262 POLISHR 8", "265 POLISHR 12", "266 MULTIFLEX 1", "267 MULTIFLEX 2", "268 MULTIFLEX 3", "269 MULTIFLEX 4", "254 IFLEX SRVR"],
   "Engraver": ["270 ENGRVR 1", "271 ENGRVR 2", "272 ENGRVR 3", "273 ENGRVR 4"],
   "Desbloqueo": ["320 DEBLOCKING 1"],
@@ -15,7 +15,6 @@ const estaciones = {
   "Producción": ["32 JOB COMPLETE"],
 };
 
-// Mapeo de nombres
 const nombreMostrar = {
   "19 LENS LOG": "19 LENS LOG SF",
   "20 LENS LOG": "20 LENS LOG FIN"
@@ -29,7 +28,6 @@ const Historial_Por_Dia = () => {
   const [registros, setRegistros] = useState([]);
   const [metas, setMetas] = useState({});
 
-  // Funciones para manejar cambios en las fechas
   const handleAnioChange = (e) => setAnio(e.target.value);
   const handleMesChange = (e) => setMes(e.target.value);
   const handleDiaChange = (e) => setDia(e.target.value);
@@ -51,7 +49,6 @@ const Historial_Por_Dia = () => {
             return hora.isBefore(moment('06:30', 'HH:mm'));
           })
         ];
-        console.log("Datos obtenidos de la API:", registrosCombinados);
         setRegistros(registrosCombinados);
       } catch (error) {
         console.error("Error al obtener los registros:", error);
@@ -68,12 +65,10 @@ const Historial_Por_Dia = () => {
         const responseMetasEngravers = await clienteAxios.get('/metas/metas-engravers');
         const responseMetasTerminados = await clienteAxios.get('/metas/metas-terminados');
         const responseMetasBiselados = await clienteAxios.get('/metas/metas-biselados');
-
         const metasPorMaquinaTallados = responseMetasTallados.data.registros.reduce((acc, curr) => {
           acc[curr.name] = curr.meta;
           return acc;
         }, {});
-
         const metasPorMaquinaLensLog = responseMetasLensLog.data.registros.reduce((acc, curr) => {
           if (curr.name.includes('LENS LOG') || curr.name.includes('JOB COMPLETE') || curr.name.includes('DEBLOCKING')) {
             if (curr.name === '19 LENS LOG' || curr.name === '20 LENS LOG FIN') {
@@ -84,32 +79,26 @@ const Historial_Por_Dia = () => {
           }
           return acc;
         }, {});
-
         const metasPorMaquinaGeneradores = responseMetasGeneradores.data.registros.reduce((acc, curr) => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
         }, {});
-
         const metasPorMaquinaPulidos = responseMetasPulidos.data.registros.reduce((acc, curr) => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
         }, {});
-
         const metasPorMaquinaEngravers = responseMetasEngravers.data.registros.reduce((acc, curr) => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
         }, {});
-
         const metasPorMaquinaTerminados = responseMetasTerminados.data.registros.reduce((acc, curr) => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
         }, {});
-
         const metasPorMaquinaBiselados = responseMetasBiselados.data.registros.reduce((acc, curr) => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
         }, {});
-
         setMetas({
           ...metasPorMaquinaTallados,
           ...metasPorMaquinaLensLog,
@@ -127,6 +116,7 @@ const Historial_Por_Dia = () => {
     obtenerRegistros();
     obtenerMetas();
   }, [anio, mes, dia]);
+
   const calcularMetasPorTurno = (metaPorHora) => ({
     matutino: metaPorHora * 7,
     vespertino: metaPorHora * 6,
@@ -149,7 +139,6 @@ const Historial_Por_Dia = () => {
     }
     return acc;
   }, {});
-
   const hitsPorEstacion = Object.entries(estaciones).reduce((acc, [nombreEstacion, maquinas]) => {
     acc[nombreEstacion] = 0;
     maquinas.forEach(maquina => {
@@ -190,9 +179,14 @@ const Historial_Por_Dia = () => {
     const fechaInicio = moment(`${anio}-${mes}-${dia} 06:30`).format('YYYY-MM-DD HH:mm');
     const fechaFin = moment(`${anio}-${mes}-${dia} 06:30`).add(1, 'days').format('YYYY-MM-DD HH:mm');
     return Object.entries(estaciones).map(([nombreEstacion, maquinas]) => {
-      const registrosEstacion = maquinas.map((maquina) => registrosAgrupados[maquina]).filter(Boolean);
+      const registrosEstacion = maquinas.map((maquina) => ({
+        maquina,
+        registro: registrosAgrupados[maquina]
+      })).filter(({ registro }) => Boolean(registro));
+
       if (registrosEstacion.length === 0) return null;
-      const totalHitsEstacion = registrosEstacion.reduce((total, registro) => total + registro.hits, 0);
+
+      const totalHitsEstacion = registrosEstacion.reduce((total, { registro }) => total + registro.hits, 0);
       const turnosEstacion = hitsPorEstacionYTurno[nombreEstacion];
       const metaPorHoraEstacion = maquinas.reduce((total, maquina) => {
         if (maquina === '19 LENS LOG' || maquina === '20 LENS LOG FIN') {
@@ -201,12 +195,12 @@ const Historial_Por_Dia = () => {
         return total + (metas[maquina] || 0);
       }, 0);
       const metasPorTurno = calcularMetasPorTurno(metaPorHoraEstacion);
-      const totalMetaEstacion = registrosEstacion.reduce((total, registro, index) => {
-        const maquina = maquinas[index];
+      const totalMetaEstacion = registrosEstacion.reduce((total, { maquina }) => {
         const metaMaquina = metas[maquina] || 0;
         return total + (metaMaquina * 24);
       }, 0);
       const claseMetaTotal = getClassName(totalHitsEstacion, totalMetaEstacion);
+
       return (
         <div key={nombreEstacion} className="mb-8">
           <p className="md:hidden text-center mb-2 text-sm text-gray-600">
@@ -223,12 +217,11 @@ const Historial_Por_Dia = () => {
                 </tr>
               </thead>
               <tbody>
-                {registrosEstacion.map((registro, index) => {
-                  const maquina = maquinas[index];
+                {registrosEstacion.map(({ maquina, registro }, index) => {
                   const metaMaquina = metas[maquina] || 0;
                   const metaJornada = metaMaquina * 24;
                   const claseMeta = getClassName(registro.hits, metaJornada);
-                  const nombreMostrarMaquina = nombreMostrar[maquina] || maquina; // Usa el nombre mapeado si existe
+                  const nombreMostrarMaquina = nombreMostrar[maquina] || maquina;
                   return (
                     <tr key={index} className="bg-white even:bg-gray-100">
                       <td className="w-1/4 py-2 px-4 border-b text-center">{nombreMostrarMaquina}</td>
@@ -261,12 +254,11 @@ const Historial_Por_Dia = () => {
               <h3 className="text-lg font-semibold">{nombreEstacion}</h3>
             </div>
             <div className="p-4 space-y-4">
-              {registrosEstacion.map((registro, index) => {
-                const maquina = maquinas[index];
+              {registrosEstacion.map(({ maquina, registro }, index) => {
                 const metaMaquina = metas[maquina] || 0;
                 const metaJornada = metaMaquina * 24;
                 const claseMeta = getClassName(registro.hits, metaJornada);
-                const nombreMostrarMaquina = nombreMostrar[maquina] || maquina; // Usa el nombre mapeado si existe
+                const nombreMostrarMaquina = nombreMostrar[maquina] || maquina;
                 return (
                   <div key={index} className="flex justify-between items-center border-b border-gray-200 pb-2">
                     <span className="font-medium text-gray-700">{nombreMostrarMaquina}</span>
