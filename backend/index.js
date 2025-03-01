@@ -24,6 +24,7 @@ import reportesTrabajosNuevosRoutes from './routes/reportesTrabajosNuevosRoutes.
 import wipTotalRoutes from './routes/wipTotalRoutes.js'
 import reportesEnviadosRoutes from './routes/reportesEnviadosRoutes.js'
 import reporteResumenRoutes from './routes/reporteResumenRoutes.js'
+import trabajosSinMovimientosRoutes from './routes/trabajosSinMovimientosRoutes.js'
 
 const app = express();
 app.use(express.json());
@@ -40,7 +41,7 @@ try {
 }
 
 //Configurar CORS
-/*const whitelist = [process.env.FRONTEND_URL];
+const whitelist = [process.env.FRONTEND_URL];
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -54,7 +55,7 @@ const corsOptions = {
   },
 };
 
-app.use(cors(corsOptions));*/
+app.use(cors(corsOptions));
 
 //Routing
 app.use("/api/generadores", registroRoutes);
@@ -83,6 +84,7 @@ app.use('/api/reportes', reportesTrabajosNuevosRoutes)
 app.use('/api/reportes', wipTotalRoutes)
 app.use('/api/reportes', reportesEnviadosRoutes)
 app.use('/api/reportes', reporteResumenRoutes)
+app.use('/api/reportes', trabajosSinMovimientosRoutes)
 
 const PORT = process.env.PORT || 3000;
 const servidor = app.listen(PORT, () => {

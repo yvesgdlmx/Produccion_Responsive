@@ -21,10 +21,11 @@ const nombreMostrar = {
 };
 
 const Historial_Por_Dia = () => {
-  const yesterday = moment().subtract(1, 'days');
-  const [anio, setAnio] = useState(yesterday.format('YYYY'));
-  const [mes, setMes] = useState(yesterday.format('MM'));
-  const [dia, setDia] = useState(yesterday.format('DD'));
+  // Para mostrar por defecto "ayer"
+  const hoy = moment();
+  const [anio, setAnio] = useState(hoy.format('YYYY'));
+  const [mes, setMes] = useState(hoy.format('MM'));
+  const [dia, setDia] = useState(hoy.format('DD'));
   const [registros, setRegistros] = useState([]);
   const [metas, setMetas] = useState({});
 
@@ -35,18 +36,31 @@ const Historial_Por_Dia = () => {
   useEffect(() => {
     const obtenerRegistros = async () => {
       try {
-        const fechaInicio = moment(`${anio}-${mes}-${dia} 06:30`);
-        const fechaFin = moment(fechaInicio).add(1, 'days').set({hour: 6, minute: 29});
-        const { data: dataDiaActual } = await clienteAxios(`/historial/historial-2/${anio}/${mes}/${dia}`);
-        const { data: dataDiaSiguiente } = await clienteAxios(`/historial/historial-2/${fechaFin.format('YYYY')}/${fechaFin.format('MM')}/${fechaFin.format('DD')}`);
+        /* 
+          Ahora, si el usuario elige el día X (por ejemplo, 13),
+          queremos que la jornada vaya desde el día anterior a las 22:00 (12/22:00)
+          hasta el día seleccionado a las 21:30 (13/21:30)
+        */
+        const fechaFin = moment(`${anio}-${mes}-${dia}`, 'YYYY-MM-DD').set({ hour: 21, minute: 30 });
+        const fechaInicio = moment(`${anio}-${mes}-${dia}`, 'YYYY-MM-DD').subtract(1, 'days').set({ hour: 22, minute: 0 });
+
+        // Consultamos la información del día anterior para capturar registros desde las 22:00 en adelante
+        const { data: dataDiaAnterior } = await clienteAxios(
+          `/historial/historial-2/${fechaInicio.format('YYYY')}/${fechaInicio.format('MM')}/${fechaInicio.format('DD')}`
+        );
+        // Consultamos la información del día seleccionado para capturar registros hasta las 21:30
+        const { data: dataDiaSeleccionado } = await clienteAxios(
+          `/historial/historial-2/${anio}/${mes}/${dia}`
+        );
+
         const registrosCombinados = [
-          ...dataDiaActual.registros.filter(r => {
+          ...dataDiaAnterior.registros.filter(r => {
             const hora = moment(r.hour, 'HH:mm');
-            return hora.isSameOrAfter(moment('06:30', 'HH:mm'));
+            return hora.isSameOrAfter(moment('22:00', 'HH:mm'));
           }),
-          ...dataDiaSiguiente.registros.filter(r => {
+          ...dataDiaSeleccionado.registros.filter(r => {
             const hora = moment(r.hour, 'HH:mm');
-            return hora.isBefore(moment('06:30', 'HH:mm'));
+            return hora.isBefore(moment('21:30', 'HH:mm'));
           })
         ];
         setRegistros(registrosCombinados);
@@ -65,13 +79,14 @@ const Historial_Por_Dia = () => {
         const responseMetasEngravers = await clienteAxios.get('/metas/metas-engravers');
         const responseMetasTerminados = await clienteAxios.get('/metas/metas-terminados');
         const responseMetasBiselados = await clienteAxios.get('/metas/metas-biselados');
+
         const metasPorMaquinaTallados = responseMetasTallados.data.registros.reduce((acc, curr) => {
           acc[curr.name] = curr.meta;
           return acc;
         }, {});
         const metasPorMaquinaLensLog = responseMetasLensLog.data.registros.reduce((acc, curr) => {
           if (curr.name.includes('LENS LOG') || curr.name.includes('JOB COMPLETE') || curr.name.includes('DEBLOCKING')) {
-            if (curr.name === '19 LENS LOG' || curr.name === '20 LENS LOG FIN') {
+            if (curr.name === 'LENS LOG' || curr.name === '20 LENS LOG FIN') {
               acc['LENS LOG TOTAL'] = (acc['LENS LOG TOTAL'] || 0) + curr.meta;
             } else {
               acc[curr.name] = curr.meta;
@@ -99,6 +114,7 @@ const Historial_Por_Dia = () => {
           acc[curr.name.toUpperCase().trim()] = curr.meta;
           return acc;
         }, {});
+
         setMetas({
           ...metasPorMaquinaTallados,
           ...metasPorMaquinaLensLog,
@@ -118,9 +134,9 @@ const Historial_Por_Dia = () => {
   }, [anio, mes, dia]);
 
   const calcularMetasPorTurno = (metaPorHora) => ({
-    matutino: metaPorHora * 7,
-    vespertino: metaPorHora * 6,
-    nocturno: metaPorHora * 7
+    matutino: metaPorHora * 8,
+    vespertino: metaPorHora * 7,
+    nocturno: metaPorHora * 8
   });
 
   const registrosAgrupados = registros.reduce((acc, registro) => {
@@ -130,6 +146,7 @@ const Historial_Por_Dia = () => {
     }
     acc[name].hits += hits;
     const hora = moment(registro.hour, 'HH:mm');
+    // Se mantienen los rangos de turnos; si se requiere ajustarlos, se pueden modificar aquí.
     if (hora.isBetween(moment('06:30', 'HH:mm'), moment('14:29', 'HH:mm'), null, '[]')) {
       acc[name].turnos.matutino += hits;
     } else if (hora.isBetween(moment('14:30', 'HH:mm'), moment('21:29', 'HH:mm'), null, '[]')) {
@@ -139,6 +156,7 @@ const Historial_Por_Dia = () => {
     }
     return acc;
   }, {});
+
   const hitsPorEstacion = Object.entries(estaciones).reduce((acc, [nombreEstacion, maquinas]) => {
     acc[nombreEstacion] = 0;
     maquinas.forEach(maquina => {
@@ -176,16 +194,18 @@ const Historial_Por_Dia = () => {
   };
 
   const renderizarTablasPorEstacion = () => {
-    const fechaInicio = moment(`${anio}-${mes}-${dia} 06:30`).format('YYYY-MM-DD HH:mm');
-    const fechaFin = moment(`${anio}-${mes}-${dia} 06:30`).add(1, 'days').format('YYYY-MM-DD HH:mm');
+    // Se define el rango a mostrar: del día anterior a las 22:00 hasta el día seleccionado a las 21:30.
+    const fechaFin = moment(`${anio}-${mes}-${dia}`, 'YYYY-MM-DD').set({ hour: 21, minute: 30 });
+    const fechaInicio = moment(`${anio}-${mes}-${dia}`, 'YYYY-MM-DD').subtract(1, 'days').set({ hour: 22, minute: 0 });
+    const fechaInicioStr = fechaInicio.format('YYYY-MM-DD HH:mm');
+    const fechaFinStr = fechaFin.format('YYYY-MM-DD HH:mm');
+
     return Object.entries(estaciones).map(([nombreEstacion, maquinas]) => {
       const registrosEstacion = maquinas.map((maquina) => ({
         maquina,
         registro: registrosAgrupados[maquina]
       })).filter(({ registro }) => Boolean(registro));
-
       if (registrosEstacion.length === 0) return null;
-
       const totalHitsEstacion = registrosEstacion.reduce((total, { registro }) => total + registro.hits, 0);
       const turnosEstacion = hitsPorEstacionYTurno[nombreEstacion];
       const metaPorHoraEstacion = maquinas.reduce((total, maquina) => {
@@ -204,16 +224,16 @@ const Historial_Por_Dia = () => {
       return (
         <div key={nombreEstacion} className="mb-8">
           <p className="md:hidden text-center mb-2 text-sm text-gray-600">
-            Rango de Fecha: {fechaInicio} - {fechaFin}
+            Rango de Fecha: {fechaInicioStr} - {fechaFinStr}
           </p>
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full bg-white border border-gray-300 shadow-lg rounded-lg table-fixed">
-              <thead className="bg-blue-500 text-white">
+              <thead className="bg-blue-500 text-white uppercase">
                 <tr>
                   <th className="w-1/4 py-2 px-4 border-b text-center font-medium">Nombre</th>
                   <th className="w-1/4 py-2 px-4 border-b text-center font-medium">Rango de Fecha</th>
                   <th className="w-1/4 py-2 px-4 border-b text-center font-medium">Hits</th>
-                  <th className="w-1/4 py-2 px-4 border-b text-center font-medium">Meta</th>
+                  <th className="w-1/4 py-2 px-4 border-b text-center font-medium">Meta por Jornada</th>
                 </tr>
               </thead>
               <tbody>
@@ -225,7 +245,7 @@ const Historial_Por_Dia = () => {
                   return (
                     <tr key={index} className="bg-white even:bg-gray-100">
                       <td className="w-1/4 py-2 px-4 border-b text-center">{nombreMostrarMaquina}</td>
-                      <td className="w-1/4 py-2 px-4 border-b text-center">{`${fechaInicio} - ${fechaFin}`}</td>
+                      <td className="w-1/4 py-2 px-4 border-b text-center">{`${fechaInicioStr} - ${fechaFinStr}`}</td>
                       <td className={`w-1/4 py-2 px-4 border-b text-center font-semibold ${claseMeta}`}>{registro.hits}</td>
                       <td className="w-1/4 py-2 px-4 border-b text-center font-semibold">{metaJornada}</td>
                     </tr>
@@ -240,9 +260,9 @@ const Historial_Por_Dia = () => {
                   <td className="py-2 px-4 border-b text-center font-bold text-gray-600" colSpan="2">Turnos: </td>
                   <td className="py-2 px-4 border-b text-center" colSpan="2">
                     <div className="flex justify-between">
+                    <span>Nocturno: <strong className={getClassName(turnosEstacion.nocturno, metasPorTurno.nocturno)}>{turnosEstacion.nocturno}</strong> / Meta: <strong className="text-gray-600">{metasPorTurno.nocturno}</strong></span>
                       <span>Matutino: <strong className={getClassName(turnosEstacion.matutino, metasPorTurno.matutino)}>{turnosEstacion.matutino}</strong> / Meta: <strong className="text-gray-600">{metasPorTurno.matutino}</strong></span>
                       <span>Vespertino: <strong className={getClassName(turnosEstacion.vespertino, metasPorTurno.vespertino)}>{turnosEstacion.vespertino}</strong> / Meta: <strong className="text-gray-600">{metasPorTurno.vespertino}</strong></span>
-                      <span>Nocturno: <strong className={getClassName(turnosEstacion.nocturno, metasPorTurno.nocturno)}>{turnosEstacion.nocturno}</strong> / Meta: <strong className="text-gray-600">{metasPorTurno.nocturno}</strong></span>
                     </div>
                   </td>
                 </tr>
@@ -283,6 +303,11 @@ const Historial_Por_Dia = () => {
             <div className="bg-green-50 p-4 border-t border-gray-200">
               <h4 className="font-semibold text-green-700 mb-2">Turnos</h4>
               <div className="grid grid-cols-3 gap-2 text-sm">
+              <div>
+                  <span className="block text-gray-600">Nocturno</span>
+                  <span className={`font-bold ${getClassName(turnosEstacion.nocturno, metasPorTurno.nocturno)}`}>{turnosEstacion.nocturno}</span>
+                  <span className="block text-xs text-gray-500">Meta: {metasPorTurno.nocturno}</span>
+                </div>
                 <div>
                   <span className="block text-gray-600">Matutino</span>
                   <span className={`font-bold ${getClassName(turnosEstacion.matutino, metasPorTurno.matutino)}`}>{turnosEstacion.matutino}</span>
@@ -292,11 +317,6 @@ const Historial_Por_Dia = () => {
                   <span className="block text-gray-600">Vespertino</span>
                   <span className={`font-bold ${getClassName(turnosEstacion.vespertino, metasPorTurno.vespertino)}`}>{turnosEstacion.vespertino}</span>
                   <span className="block text-xs text-gray-500">Meta: {metasPorTurno.vespertino}</span>
-                </div>
-                <div>
-                  <span className="block text-gray-600">Nocturno</span>
-                  <span className={`font-bold ${getClassName(turnosEstacion.nocturno, metasPorTurno.nocturno)}`}>{turnosEstacion.nocturno}</span>
-                  <span className="block text-xs text-gray-500">Meta: {metasPorTurno.nocturno}</span>
                 </div>
               </div>
             </div>
