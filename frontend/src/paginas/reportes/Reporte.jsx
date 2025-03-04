@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import clienteAxios from '../../../config/clienteAxios';
 import Heading from '../../components/others/Heading';
 import { formatNumber } from '../../helpers/formatNumber';
+import Actualizacion from '../../components/others/Actualizacion';
 
 const agruparDatos = (registros) => {
   const grupos = {
@@ -175,7 +176,6 @@ const Reporte = () => {
   const [datosAgrupados, setDatosAgrupados] = useState(null);
   const [totalesPorCliente, setTotalesPorCliente] = useState(null);
   const [totalesFinishedSemifinished, setTotalesFinishedSemifinished] = useState(null);
-  const [ultimaActualizacion, setUltimaActualizacion] = useState('');
 
   useEffect(() => {
     const fetchDatos = async () => {
@@ -185,32 +185,9 @@ const Reporte = () => {
         setDatosAgrupados(grupos);
         setTotalesPorCliente(totalesPorCliente);
         setTotalesFinishedSemifinished(totalesFinishedSemifinished);
-        actualizarHora();
       } catch (error) {
         console.error('Error al obtener los datos:', error);
       }
-    };
-
-    const actualizarHora = () => {
-      const ahora = new Date();
-      let ultimaActualizacion;
-      if (ahora.getMinutes() >= 35) {
-        ultimaActualizacion = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), ahora.getHours(), 35, 0);
-      } else {
-        ultimaActualizacion = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate(), ahora.getHours() - 1, 35, 0);
-      }
-      const horaFormateada = ultimaActualizacion.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setUltimaActualizacion(horaFormateada);
-    };
-
-    const calcularTiempoHastaProximaActualizacion = () => {
-      const ahora = new Date();
-      const proximaActualizacion = new Date(ahora);
-      if (ahora.getMinutes() >= 35) {
-        proximaActualizacion.setHours(ahora.getHours() + 1);
-      }
-      proximaActualizacion.setMinutes(35, 0, 0);
-      return proximaActualizacion - ahora;
     };
 
     fetchDatos();
@@ -218,7 +195,7 @@ const Reporte = () => {
       fetchDatos();
       const intervalo = setInterval(fetchDatos, 3600000);
       return () => clearInterval(intervalo);
-    }, calcularTiempoHastaProximaActualizacion());
+    });
 
     return () => clearTimeout(timeout);
   }, []);
@@ -230,16 +207,7 @@ const Reporte = () => {
   return (
     <div className="mx-auto mt-6 md:mt-0">
       <Heading title="Reporte wip detallado" />
-      <div className='bg-gray-200 p-4 mb-6 rounded flex justify-between xs:hidden md:flex'>
-        <div className='flex gap-1'>
-          <img src="/img/clock.png" alt="reloj" width={25}/>
-          <p className='text-gray-700 font-bold uppercase'>Última actualización: {ultimaActualizacion}</p>
-        </div>
-        <div>
-          <p className='font-medium text-gray-800 uppercase'>Actualización cada hora</p>
-        </div>
-      </div>
-
+      <Actualizacion/>
       <div className="bg-white p-4 mb-6 rounded shadow-md">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

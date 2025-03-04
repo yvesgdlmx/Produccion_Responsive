@@ -374,7 +374,7 @@ const Layout = () => {
                                                 onClick={handleMenuItemClick} 
                                                 className="block py-2 px-3 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                                             >
-                                            Trabajos sin movimientos
+                                            Trabajos sin movimiento
                                             </Link>
                                         </li>
                                     </ul>
