@@ -119,7 +119,7 @@ const Login = () => {
           </form>
         </div>
         <div className="px-8 py-4 bg-gray-700 text-center">
-          <span className="text-gray-400">¿Aún no tienes una cuenta? </span>
+          <span className="text-white">¿Aún no tienes una cuenta? </span>
           <Link className="font-medium text-indigo-500 hover:text-indigo-400" to="#">
             Crear una
           </Link>
