@@ -1,34 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
-import TablaGenerica from '../../components/others/TablaGenerica';
-import CardRepoFacturacion from '../../components/others/cards/CardRepoFacturacion';
-import CardTotalesRepoFacturacion from '../../components/others/cards/CardTotalesRepoFacturacion';
-import { FaTable } from 'react-icons/fa';
 import Heading from '../../components/others/Heading';
-// Función para convertir un string de moneda a número
-const convertToNumber = (moneyStr) => parseFloat(moneyStr.replace(/[$,]/g, ''));
-// Función para formatear un número a moneda
-const formatCurrency = (value) => {
-  return `$${value.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+import Nvi from '../../components/finanzas/nvi';
+import Hoya from '../../components/finanzas/Hoya';
+import Ink from '../../components/finanzas/Ink';
+import CardFacturacionNvi from '../../components/others/cards/CardFacturacionNvi';
+import ModalSemanas from '../../components/modals/ModalSemanas';
+// Importamos las opciones y datos generados en el módulo de constantes
+import { optionsYear, optionsWeek, dataSemanas } from '../../components/others/arrays/ArrayFinanzas';
+// Importamos el ícono de calendario de Heroicons v2
+import { CalendarIcon } from '@heroicons/react/24/outline';
+// Función para calcular el número de semana ISO
+const getWeekNumber = (d) => {
+  // Copia de la fecha
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  // Obtener el día de la semana (lunes=1, domingo=7)
+  const dayNum = date.getUTCDay() || 7;
+  // Se ajusta para que la semana inicie en lunes
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
 };
 const Datos = () => {
-  // Opciones para react‑select
-  const optionsYear = [
-    { value: '2024', label: '2024' },
-    { value: '2023', label: '2023' },
-    { value: '2022', label: '2022' }
-  ];
-  const optionsWeek = [
-    { value: '51', label: '51' },
-    { value: '50', label: '50' },
-    { value: '49', label: '49' }
-  ];
-  // Estados para almacenar la opción seleccionada
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedWeek, setSelectedWeek] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   // Estilos personalizados para react‑select
   const customStyles = {
     control: (provided) => ({
@@ -40,240 +36,85 @@ const Datos = () => {
     }),
     menu: (provided) => ({ ...provided, zIndex: 9999 })
   };
-  // Datos para la tabla NVI
-  const nviData = [
-    { semana: '51', dia: '16/12/2024', trabTerminadoNVI: '3,637', dineroTerminado: '$50,000.00', trabTalladoNVI: '4500', dineroTallado: '$20,500.00', trabNVIUV: '700', dineroNVIUV: '$7,000.00', trabNVIHC: '1800', dineroNVIHC: '$5,000.00', trabNVIAR: '2000', dineroNVIAR: '$8,500.00', totalTrab: '8,137', totalDinero: '$70,500.00' },
-    { semana: '51', dia: '17/12/2024', trabTerminadoNVI: '3,638', dineroTerminado: '$50,001.00', trabTalladoNVI: '4500', dineroTallado: '$20,500.00', trabNVIUV: '700', dineroNVIUV: '$7,000.00', trabNVIHC: '1800', dineroNVIHC: '$5,000.00', trabNVIAR: '2000', dineroNVIAR: '$8,500.00', totalTrab: '8,138', totalDinero: '$70,501.00' },
-    { semana: '51', dia: '18/12/2024', trabTerminadoNVI: '3,639', dineroTerminado: '$50,002.00', trabTalladoNVI: '4500', dineroTallado: '$20,500.00', trabNVIUV: '700', dineroNVIUV: '$7,000.00', trabNVIHC: '1800', dineroNVIHC: '$5,000.00', trabNVIAR: '2000', dineroNVIAR: '$8,500.00', totalTrab: '8,139', totalDinero: '$70,502.00' },
-    { semana: '51', dia: '19/12/2024', trabTerminadoNVI: '3,640', dineroTerminado: '$50,003.00', trabTalladoNVI: '4500', dineroTallado: '$20,500.00', trabNVIUV: '700', dineroNVIUV: '$7,000.00', trabNVIHC: '1800', dineroNVIHC: '$5,000.00', trabNVIAR: '2000', dineroNVIAR: '$8,500.00', totalTrab: '8,140', totalDinero: '$70,503.00' },
-    { semana: '51', dia: '20/12/2024', trabTerminadoNVI: '3,641', dineroTerminado: '$50,004.00', trabTalladoNVI: '4500', dineroTallado: '$20,500.00', trabNVIUV: '700', dineroNVIUV: '$7,000.00', trabNVIHC: '1800', dineroNVIHC: '$5,000.00', trabNVIAR: '2000', dineroNVIAR: '$8,500.00', totalTrab: '8,141', totalDinero: '$70,504.00' }
-  ];
-  // Datos para la tabla HOYA
-  const hoyaData = [
-    { semana: '51', dia: '16/12/2024', trabTalladoNVI: '100', dineroTallado: '$150.00', trabHC: '30', dineroHC: '$70.00', trabARStandard: '20', dineroARStandard: '$100.00', trabARPremium: '50', dineroARPremium: '$110.00', totalTrab: '100', totalDinero: '$430.00' },
-    { semana: '51', dia: '17/12/2024', trabTalladoNVI: '100', dineroTallado: '$150.00', trabHC: '30', dineroHC: '$70.00', trabARStandard: '20', dineroARStandard: '$100.00', trabARPremium: '50', dineroARPremium: '$110.00', totalTrab: '100', totalDinero: '$430.00' },
-    { semana: '51', dia: '18/12/2024', trabTalladoNVI: '100', dineroTallado: '$150.00', trabHC: '30', dineroHC: '$70.00', trabARStandard: '20', dineroARStandard: '$100.00', trabARPremium: '50', dineroARPremium: '$110.00', totalTrab: '100', totalDinero: '$430.00' },
-    { semana: '51', dia: '19/12/2024', trabTalladoNVI: '100', dineroTallado: '$150.00', trabHC: '30', dineroHC: '$70.00', trabARStandard: '20', dineroARStandard: '$100.00', trabARPremium: '50', dineroARPremium: '$110.00', totalTrab: '100', totalDinero: '$430.00' },
-    { semana: '51', dia: '20/12/2024', trabTalladoNVI: '100', dineroTallado: '$150.00', trabHC: '30', dineroHC: '$70.00', trabARStandard: '20', dineroARStandard: '$100.00', trabARPremium: '50', dineroARPremium: '$110.00', totalTrab: '100', totalDinero: '$430.00' }
-  ];
-  // Datos para la tabla INK
-  const inkData = [
-    { semana: '51', dia: '16/12/2024', trabTalladoNVI: '70', dineroTallado: '$85.00', trabHC: '50', dineroHC: '$30.00', trabAR: '15', dineroAR: '$5,000.00', totalTrab: '70', totalDinero: '$5,115.00' },
-    { semana: '51', dia: '17/12/2024', trabTalladoNVI: '70', dineroTallado: '$85.00', trabHC: '50', dineroHC: '$30.00', trabAR: '15', dineroAR: '$5,000.00', totalTrab: '70', totalDinero: '$5,115.00' },
-    { semana: '51', dia: '18/12/2024', trabTalladoNVI: '70', dineroTallado: '$85.00', trabHC: '50', dineroHC: '$30.00', trabAR: '15', dineroAR: '$5,000.00', totalTrab: '70', totalDinero: '$5,115.00' },
-    { semana: '51', dia: '19/12/2024', trabTalladoNVI: '70', dineroTallado: '$85.00', trabHC: '50', dineroHC: '$30.00', trabAR: '15', dineroAR: '$5,000.00', totalTrab: '70', totalDinero: '$5,115.00' },
-    { semana: '51', dia: '20/12/2024', trabTalladoNVI: '70', dineroTallado: '$85.00', trabHC: '50', dineroHC: '$30.00', trabAR: '15', dineroAR: '$5,000.00', totalTrab: '70', totalDinero: '$5,115.00' }
-  ];
-  // Columnas para las tablas (versión escritorio)
-  const columnsNvi = [
-    { header: 'SEMANA', accessor: 'semana' },
-    { header: 'DÍA', accessor: 'dia' },
-    { header: 'Trab TERMINADO NVI', accessor: 'trabTerminadoNVI' },
-    { header: '$ TERMINADO', accessor: 'dineroTerminado' },
-    { header: 'Trab TALLADO NVI', accessor: 'trabTalladoNVI' },
-    { header: '$ TALLADO', accessor: 'dineroTallado' },
-    { header: 'Trab NVI UV', accessor: 'trabNVIUV' },
-    { header: '$ NVI UV', accessor: 'dineroNVIUV' },
-    { header: 'Trab NVI HC', accessor: 'trabNVIHC' },
-    { header: '$ NVI HC', accessor: 'dineroNVIHC' },
-    { header: 'Trab NVI AR', accessor: 'trabNVIAR' },
-    { header: '$ NVI AR', accessor: 'dineroNVIAR' },
-    { header: 'TOTAL TRAB NVI', accessor: 'totalTrab' },
-    { header: 'TOTAL $ NVI', accessor: 'totalDinero' }
-  ];
-  const columnsHoya = [
-    { header: 'SEMANA', accessor: 'semana' },
-    { header: 'DÍA', accessor: 'dia' },
-    { header: 'Trab TALLADO HOYA', accessor: 'trabTalladoNVI' },
-    { header: '$ Tallado', accessor: 'dineroTallado' },
-    { header: 'Trab HC', accessor: 'trabHC' },
-    { header: '$ HC', accessor: 'dineroHC' },
-    { header: 'Trab AR Standard', accessor: 'trabARStandard' },
-    { header: '$ AR Standard', accessor: 'dineroARStandard' },
-    { header: 'Trab AR Premium', accessor: 'trabARPremium' },
-    { header: '$ AR Premium', accessor: 'dineroARPremium' },
-    { header: 'TOTAL TRAB HOYA', accessor: 'totalTrab' },
-    { header: 'TOTAL $ HOYA', accessor: 'totalDinero' }
-  ];
-  const columnsInk = [
-    { header: 'SEMANA', accessor: 'semana' },
-    { header: 'DÍA', accessor: 'dia' },
-    { header: 'Trab TALLADO INK', accessor: 'trabTalladoNVI' },
-    { header: '$ Tallado', accessor: 'dineroTallado' },
-    { header: 'Trab HC', accessor: 'trabHC' },
-    { header: '$ HC', accessor: 'dineroHC' },
-    { header: 'Trab AR', accessor: 'trabAR' },
-    { header: '$ AR', accessor: 'dineroAR' },
-    { header: 'TOTAL TRAB INK', accessor: 'totalTrab' },
-    { header: 'TOTAL $ INK', accessor: 'totalDinero' }
-  ];
-  // Totales globales y por columna
-  const totalNvi = nviData.reduce((acc, row) => acc + convertToNumber(row.totalDinero), 0);
-  const totalHoya = hoyaData.reduce((acc, row) => acc + convertToNumber(row.totalDinero), 0);
-  const totalInk = inkData.reduce((acc, row) => acc + convertToNumber(row.totalDinero), 0);
-  const totalDineroTerminado = nviData.reduce((acc, row) => acc + convertToNumber(row.dineroTerminado), 0);
-  const totalDineroTallado   = nviData.reduce((acc, row) => acc + convertToNumber(row.dineroTallado), 0);
-  const totalDineroNviUv     = nviData.reduce((acc, row) => acc + convertToNumber(row.dineroNVIUV), 0);
-  const totalDineroNviHc     = nviData.reduce((acc, row) => acc + convertToNumber(row.dineroNVIHC), 0);
-  const totalDineroNviAr     = nviData.reduce((acc, row) => acc + convertToNumber(row.dineroNVIAR), 0);
-  const totalDineroTalladoHoya = hoyaData.reduce((acc, row) => acc + convertToNumber(row.dineroTallado), 0);
-  const totalDineroArStandard  = hoyaData.reduce((acc, row) => acc + convertToNumber(row.dineroARStandard), 0);
-  const totalDineroArPremium   = hoyaData.reduce((acc, row) => acc + convertToNumber(row.dineroARPremium), 0);
-  const totalDineroTalladoInk = inkData.reduce((acc, row) => acc + convertToNumber(row.dineroTallado), 0);
-  const totalDineroHcInk      = inkData.reduce((acc, row) => acc + convertToNumber(row.dineroHC), 0);
-  const totalDineroArInk      = inkData.reduce((acc, row) => acc + convertToNumber(row.dineroAR), 0);
-  // Configuración de campos para el componente CardRepoFacturacion
-  const camposNvi = [
-    { label: 'Semana', accessor: 'semana' },
-    { label: 'Día', accessor: 'dia' },
-    { label: 'Trab. Terminado', accessor: 'trabTerminadoNVI' },
-    { label: '$ Terminados', accessor: 'dineroTerminado' },
-    { label: 'Trab. Tallado', accessor: 'trabTalladoNVI' },
-    { label: '$ Tallado', accessor: 'dineroTallado' },
-    { label: 'Trab. NVI UV', accessor: 'trabNVIUV' },
-    { label: '$ NVI UV', accessor: 'dineroNVIUV' },
-    { label: 'Trab. NVI HC', accessor: 'trabNVIHC' },
-    { label: '$ NVI HC', accessor: 'dineroNVIHC' },
-    { label: 'Trab. NVI AR', accessor: 'trabNVIAR' },
-    { label: '$ NVI AR', accessor: 'dineroNVIAR' },
-    { label: 'Total Trab', accessor: 'totalTrab' },
-    { label: 'Total $', accessor: 'totalDinero' },
-  ];
-  const camposHoya = [
-    { label: 'Semana', accessor: 'semana' },
-    { label: 'Día', accessor: 'dia' },
-    { label: 'Trab. Tallado', accessor: 'trabTalladoNVI' },
-    { label: '$ Tallado', accessor: 'dineroTallado' },
-    { label: 'Trab. HC', accessor: 'trabHC' },
-    { label: '$ HC', accessor: 'dineroHC' },
-    { label: 'AR Standard', accessor: 'trabARStandard' },
-    { label: '$ AR Standard', accessor: 'dineroARStandard' },
-    { label: 'AR Premium', accessor: 'trabARPremium' },
-    { label: '$ AR Premium', accessor: 'dineroARPremium' },
-    { label: 'Total Trab', accessor: 'totalTrab' },
-    { label: 'Total $', accessor: 'totalDinero' },
-  ];
-  const camposInk = [
-    { label: 'Semana', accessor: 'semana' },
-    { label: 'Día', accessor: 'dia' },
-    { label: 'Trab. Tallado', accessor: 'trabTalladoNVI' },
-    { label: '$ Tallado', accessor: 'dineroTallado' },
-    { label: 'Trab. HC', accessor: 'trabHC' },
-    { label: '$ HC', accessor: 'dineroHC' },
-    { label: 'Trab. AR', accessor: 'trabAR' },
-    { label: '$ AR', accessor: 'dineroAR' },
-    { label: 'Total Trab', accessor: 'totalTrab' },
-    { label: 'Total $', accessor: 'totalDinero' },
-  ];
-  // Renderizado de filtros
-  const renderFilterSelector = () => (
-    <div className="flex flex-wrap justify-center gap-6 mb-8">
-      <div className="w-64">
-        <Select 
-          options={optionsYear} 
-          value={selectedYear} 
-          onChange={(option) => setSelectedYear(option)} 
-          placeholder="Selecciona un año" 
-          styles={customStyles} 
-        />
-      </div>
-      <div className="w-64">
-        <Select 
-          options={optionsWeek} 
-          value={selectedWeek} 
-          onChange={(option) => setSelectedWeek(option)} 
-          placeholder="Selecciona una semana" 
-          styles={customStyles} 
-        />
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    const currentWeek = getWeekNumber(new Date());
+    // Buscar en los arrays de opciones el año y la semana correspondientes
+    const defaultYearOption = optionsYear.find((option) => option.value === currentYear);
+    const defaultWeekOption = optionsWeek.find((option) => {
+      // Dependiendo del formato de week en tu array,
+      // se puede hacer comparación numérica o por string.
+      return Number(option.value) === currentWeek;
+    });
+    if (defaultYearOption) {
+      setSelectedYear(defaultYearOption);
+    }
+    if (defaultWeekOption) {
+      setSelectedWeek(defaultWeekOption);
+    }
+  }, []);
   return (
     <>
       <div className="px-4 py-2">
         <Heading title="Reporte de Facturación" />
       </div>
       <div className="p-2 space-y-10">
-        {renderFilterSelector()}
+        {/* Filtros mediante select para año y semana */}
+        <div className="flex flex-wrap justify-center gap-6 mb-8">
+          <div className="w-64">
+            <Select 
+              options={optionsYear}
+              value={selectedYear} 
+              onChange={(option) => setSelectedYear(option)} 
+              placeholder="Selecciona un año" 
+              styles={customStyles}
+            />
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-64">
+              <Select 
+                options={optionsWeek}
+                value={selectedWeek} 
+                onChange={(option) => setSelectedWeek(option)} 
+                placeholder="Selecciona una semana" 
+                styles={customStyles}
+              />
+            </div>
+            {/* Botón para abrir el modal con ícono de calendario de Heroicons */}
+            <button 
+              className="flex items-center px-4 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-700 transition-colors shadow-md"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <CalendarIcon className="h-5 w-5" />
+              <span className="ml-2">Ver rangos</span>
+            </button>
+          </div>
+        </div>
+        {/* Renderiza los componentes hijos solo cuando se hayan seleccionado ambos filtros */}
+        {selectedYear && selectedWeek && (
+          <>
+            <Nvi anio={selectedYear.value} semana={selectedWeek.value} />
+            <Hoya anio={selectedYear.value} semana={selectedWeek.value} />
+            <Ink anio={selectedYear.value} semana={selectedWeek.value} />
+          </>
+        )}
+        {/* Sección para mostrar cards en un grid de 3 columnas */}
+        {selectedYear && selectedWeek && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CardFacturacionNvi anio={selectedYear.value} semana={selectedWeek.value} />
+          </div>
+        )}
         {/* Sección de escritorio (tablas) solo visible en md y superiores */}
         <div className="hidden md:block space-y-10">
-          {/* Tabla NVI */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 text-center flex items-center justify-center gap-2 mb-4">
-              <FaTable /> <span>NVI</span>
-            </h2>
-            <TablaGenerica columns={columnsNvi} data={nviData} />
-          </div>
-          {/* Tabla HOYA */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 text-center flex items-center justify-center gap-2 mb-4">
-              <FaTable /> <span>HOYA</span>
-            </h2>
-            <TablaGenerica columns={columnsHoya} data={hoyaData} />
-          </div>
-          {/* Tabla INK */}
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 text-center flex items-center justify-center gap-2 mb-4">
-              <FaTable /> <span>INK</span>
-            </h2>
-            <TablaGenerica columns={columnsInk} data={inkData} />
-          </div>
+          {/* Aquí incluirás el resto de la visualización para escritorio */}
         </div>
-        {/* Sección móvil (Cards) visible en pantallas pequeñas */}
-        <div className="block md:hidden space-y-6">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2 text-center">NVI</h2>
-            {nviData.map((registro, index) => (
-              <CardRepoFacturacion 
-                key={index}
-                registro={registro}
-                headerTitle={`Registro ${index + 1}`}
-                fields={camposNvi}
-              />
-            ))}
-          </div>
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2 text-center">HOYA</h2>
-            {hoyaData.map((registro, index) => (
-              <CardRepoFacturacion 
-                key={index}
-                registro={registro}
-                headerTitle={`Registro ${index + 1}`}
-                fields={camposHoya}
-              />
-            ))}
-          </div>
-          <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2 text-center">INK</h2>
-            {inkData.map((registro, index) => (
-              <CardRepoFacturacion 
-                key={index}
-                registro={registro}
-                headerTitle={`Registro ${index + 1}`}
-                fields={camposInk}
-              />
-            ))}
-          </div>
-        </div>
-        {/* Sección de totales utilizando el componente TotalesGrid */}
-        <CardTotalesRepoFacturacion
-          totalNvi={totalNvi}
-          totalDineroTerminado={totalDineroTerminado}
-          totalDineroTallado={totalDineroTallado}
-          totalDineroNviUv={totalDineroNviUv}
-          totalDineroNviHc={totalDineroNviHc}
-          totalDineroNviAr={totalDineroNviAr}
-          totalHoya={totalHoya}
-          totalDineroTalladoHoya={totalDineroTalladoHoya}
-          totalDineroArStandard={totalDineroArStandard}
-          totalDineroArPremium={totalDineroArPremium}
-          totalInk={totalInk}
-          totalDineroTalladoInk={totalDineroTalladoInk}
-          totalDineroHcInk={totalDineroHcInk}
-          totalDineroArInk={totalDineroArInk}
-          formatCurrency={formatCurrency}
-        />
       </div>
+      {/* Modal para mostrar todas las semanas y su rango de fechas */}
+      <ModalSemanas 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        semanasData={dataSemanas}
+      />
     </>
   );
 };

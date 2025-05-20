@@ -39,6 +39,61 @@ const obtenerRegistrosHoyYAyer = async (req, res) => {
     }
 }
 
+const obtenerRegistrosPorFecha = async (req, res) => {
+    try {
+      // Extraer año, mes y día de los parámetros de la URL
+      const { year, month, day } = req.params;
+      // Construir la fecha seleccionada en formato "YYYY-MM-DD" usando moment en la zona horaria de México
+      const fechaSeleccionada = moment
+        .tz(`${year}-${month}-${day}`, "YYYY-M-D", "America/Mexico_City")
+        .format("YYYY-MM-DD");
+      console.log("Fecha seleccionada:", fechaSeleccionada);
+      // Calcular la fecha del día anterior a la fecha seleccionada
+      const fechaDiaAnterior = moment
+        .tz(fechaSeleccionada, "YYYY-MM-DD", "America/Mexico_City")
+        .subtract(1, "days")
+        .format("YYYY-MM-DD");
+      console.log("Fecha del día anterior:", fechaDiaAnterior);
+      // Definir rangos de tiempo para la fecha seleccionada y el día anterior
+      const rangoFechaSeleccionada = {
+        [Op.gte]: new Date(`${fechaSeleccionada}T00:00:00`),
+        [Op.lt]: new Date(`${fechaSeleccionada}T23:59:59.999`)
+      };
+      const rangoFechaAnterior = {
+        [Op.gte]: new Date(`${fechaDiaAnterior}T00:00:00`),
+        [Op.lt]: new Date(`${fechaDiaAnterior}T23:59:59.999`)
+      };
+      // Definir patrones de búsqueda para el campo name
+      const patron1 = "19 LENS LOG-SF%";
+      const patron2 = "20 LENS LOG-FIN%";
+      // Buscar registros que cumplan con:
+      // 1. La fecha sea la seleccionada o el día anterior.
+      // 2. El campo name comience con uno de los dos patrones.
+      const registros = await Manual.findAll({
+        where: {
+          [Op.and]: [
+            {
+              name: {
+                [Op.or]: [{ [Op.like]: patron1 }, { [Op.like]: patron2 }]
+              }
+            },
+            {
+              [Op.or]: [
+                { fecha: rangoFechaSeleccionada },
+                { fecha: rangoFechaAnterior }
+              ]
+            }
+          ]
+        }
+      });
+      res.json({ registros });
+    } catch (error) {
+      console.error("Error al obtener los registros con la fecha específica:", error);
+      res.status(500).json({ error: "Error al obtener los registros con la fecha específica" });
+    }
+  };
+
 export {
-    obtenerRegistrosHoyYAyer
+    obtenerRegistrosHoyYAyer,
+    obtenerRegistrosPorFecha
 }

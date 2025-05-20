@@ -4,6 +4,7 @@ import DesktopMenuWhite from '../components/others/menus/DesktopMenuWhite';
 import MobileMenuWhite from '../components/others/menus/MobileMenuWhite';
 import useAuth from '../../hooks/useAuth';
 
+
 const Layout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { auth } = useAuth();

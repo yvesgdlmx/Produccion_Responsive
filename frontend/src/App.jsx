@@ -4,6 +4,7 @@ import Layout from './layouts/Layout';
 import ScrollToTop from './components/others/ScrollToTop';
 import { AuthProvider } from '../context/AuthProvider';
 import AuthLayout from './layouts/AuthLayout';
+import Totales_Surtido_Maquina2 from './components/totales_maquina/Totales_Surtido_Maquina2';
 
 // Usar React.lazy para cargar componentes de forma asíncrona
 const Login = lazy(() => import('./components/others/Login'));
@@ -21,6 +22,7 @@ const Totales_AR_Maquina = lazy(() => import('./components/totales_maquina/Total
 const Totales_Desbloqueo_Maquina = lazy(() => import('./components/totales_maquina/Totales_Desbloqueo_Maquina'));
 const Totales_HardCoat_Maquina = lazy(() => import('./components/totales_maquina/Totales_HardCoat_Maquina'));
 const Totales_Recubrimiento_Maquina = lazy(() => import('./components/totales_maquina/Totales_Recubrimiento_Maquina'));
+const Surtido_Detallado = lazy(() => import('./components/totales_maquina/totales_detallados/Surtido_Detallado'));
 const Manuales_Metas = lazy(() => import('./paginas/metas/Manuales_Metas'));
 const Tallado_Metas = lazy(() => import('./paginas/metas/Tallado_Metas'));
 const Generado_Metas = lazy(() => import('./paginas/metas/Generado_Metas'));
@@ -48,6 +50,7 @@ const ReportesTrabajosEnviados = lazy(() => import('./paginas/reportes/ReportesT
 const ResumenTrabajo = lazy(() => import('./paginas/reportes/ResumenTrabajo'));
 const Facturas =  lazy(() => import('./paginas/finanzas/Facturas'));
 const ReporteTrabajosSinMovimientos = lazy(() => import('./paginas/reportes/ReporteTrabajosSinMovimientos'));
+const MermaPorHora = lazy(() => import('./paginas/mermas/MermaPorHora'));
 
 function App() {
   return (
@@ -60,6 +63,7 @@ function App() {
               <Route index element={<Procesos />} />
               <Route path='/totales_estacion' element={<Totales_Estacion />} />
               <Route path='/totales_surtido_maquina' element={<Totales_Surtido_Maquina />} />
+              <Route path='/totales_surtido_maquina2' element={<Totales_Surtido_Maquina2 />} />
               <Route path='/totales_generado_maquina' element={<Totales_Generado_Maquina />} />
               <Route path='/totales_pulido_maquina' element={<Totales_Pulido_Maquina />} />
               <Route path='/totales_ar_maquina' element={<Totales_AR_Maquina />} />
@@ -71,6 +75,7 @@ function App() {
               <Route path='/totales_terminado_maquina' element={<Totales_Terminado_Maquina />} />
               <Route path='/totales_biselado_maquina' element={<Totales_Biselado_Maquina />} />
               <Route path='/totales_produccion_maquina' element={<Totales_Produccion_Maquina />} />
+              <Route path='/surtido_detallado' element={<Surtido_Detallado />} />
               <Route path='/manuales_metas' element={<Manuales_Metas />} />
               <Route path='/tallado_metas' element={<Tallado_Metas />} />
               <Route path='/generado_metas' element={<Generado_Metas />} />
@@ -98,6 +103,7 @@ function App() {
               <Route path='/reportes_resumen_trabajo' element={<ResumenTrabajo/>} />
               <Route path='/reportes_trabajos_sin_movimientos' element={<ReporteTrabajosSinMovimientos/>} />
               <Route path='/finanzas_facturas' element={<Facturas/>} />
+              <Route path='/mermas_por_hora' element={<MermaPorHora/>} />
             </Route>
             <Route path='/auth' element={<AuthLayout />}>
               <Route index element={<Login />} />
