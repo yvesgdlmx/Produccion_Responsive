@@ -68,7 +68,9 @@ const Totales_Surtido_Maquina2 = () => {
     console.log("Nombre extraído:", base);
     return base;
   };
+  
   const [metasMapping, setMetasMapping] = useState({});
+
   useEffect(() => {
     const fetchMetas = async () => {
       try {
@@ -90,12 +92,12 @@ const Totales_Surtido_Maquina2 = () => {
       try {
         const response = await clienteAxios.get("/manual/manual/actualdia");
         const registros = response.data.registros || [];
-        console.log('Registros desde API:', registros);
+        console.log("Registros desde API:", registros);
         const now = new Date();
-        const currentDateStr = now.toISOString().split('T')[0];
+        const currentDateStr = now.toISOString().split("T")[0];
         const yesterday = new Date(now);
         yesterday.setDate(now.getDate() - 1);
-        const yesterdayDateStr = yesterday.toISOString().split('T')[0];
+        const yesterdayDateStr = yesterday.toISOString().split("T")[0];
         const registrosFiltrados = registros.filter(reg => {
           if (reg.fecha === currentDateStr) return true;
           if (reg.fecha === yesterdayDateStr && reg.hour.slice(0, 5) >= "22:00") return true;
@@ -106,17 +108,21 @@ const Totales_Surtido_Maquina2 = () => {
         registrosFiltrados.forEach(reg => {
           hourSet.add(reg.hour.slice(0, 5));
         });
+        
         const allHours = Array.from(hourSet);
-        const specialHoursOrder = ["22:00", "23:00", "00:00"];
-        const specialHours = allHours.filter(hour => specialHoursOrder.includes(hour));
-        const normalHours = allHours.filter(hour => !specialHoursOrder.includes(hour));
-        normalHours.sort((a, b) => (a > b ? -1 : a < b ? 1 : 0));
-        const sortedSpecialHours = specialHours.sort(
-          (a, b) => specialHoursOrder.indexOf(a) - specialHoursOrder.indexOf(b)
-        );
-        const uniqueHours = [...normalHours, ...sortedSpecialHours];
-        console.log("Horas únicas (orden modificada):", uniqueHours);
-        const generatedHourColumns = uniqueHours.map(h => ({
+        // Ordenar las horas considerando que las horas anteriores a las 22 se cuentan del siguiente día.
+        allHours.sort((a, b) => {
+          const [horaA] = a.split(":").map(Number);
+          const [horaB] = b.split(":").map(Number);
+          const adjustedA = horaA < 22 ? horaA + 24 : horaA;
+          const adjustedB = horaB < 22 ? horaB + 24 : horaB;
+          return adjustedA - adjustedB;
+        });
+        // Si deseas invertir el orden para que los registros más recientes queden a la izquierda,
+        // invertimos el arreglo con .reverse()
+        allHours.reverse();
+        console.log("Horas únicas ordenadas (invertido):", allHours);
+        const generatedHourColumns = allHours.map(h => ({
           header: `${h} - ${addOneHour(h)}`,
           accessor: `hour_${h}`,
         }));
@@ -144,6 +150,7 @@ const Totales_Surtido_Maquina2 = () => {
     };
     fetchData();
   }, []);
+
   const horasTranscurridas = useMemo(() => {
     const now = new Date();
     let shiftStart = new Date(now);

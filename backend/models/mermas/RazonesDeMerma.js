@@ -21,6 +21,22 @@ const RazonesDeMerma = db.define('conteo_razones_mermas', {
   total: {
     type: DataTypes.INTEGER,
     allowNull: true
+  },
+  traynumber: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  department: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  position: {
+    type: DataTypes.STRING(100),
+    allowNull: true
+  },
+  part: {
+    type: DataTypes.STRING(100),
+    allowNull: true
   }
 }, {
   timestamps: false
