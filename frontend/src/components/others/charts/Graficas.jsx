@@ -3,7 +3,7 @@ import Select from 'react-select';
 import GraficaSemanal from './GraficaSemanal';
 import GraficaDiaria from './GraficaDiaria';
 const Graficas = () => {
-  // Gráfica semanal
+  // Opciones y estado para la gráfica semanal (estáticos)
   const weekOptions = [
     { value: 'current', label: 'Semana Actual' },
     { value: 'last', label: 'Semana Pasada' },
@@ -29,11 +29,13 @@ const Graficas = () => {
       title: { display: true, text: 'Producción por Semana' },
     },
   };
-  // Gráfica diaria
+  // Opciones para la gráfica diaria (filtros)
+  // Se pueden agregar los años que se requieran. Si el año actual no existe, se puede agregar.
   const yearOptions = [
-    { value: '2023', label: '2023' },
-    { value: '2022', label: '2022' },
+    { value: '2024', label: '2024' },
+    { value: '2025', label: '2025' },
   ];
+  // Opciones para el mes y día
   const monthOptions = [
     { value: '1', label: 'Enero' },
     { value: '2', label: 'Febrero' },
@@ -52,33 +54,28 @@ const Graficas = () => {
     value: String(i + 1),
     label: String(i + 1),
   }));
-  const [selectedYear, setSelectedYear] = useState(yearOptions[0]);
-  const [selectedMonth, setSelectedMonth] = useState(monthOptions[0]);
-  const [selectedDay, setSelectedDay] = useState(dayOptions[0]);
-  const dailyLabels = Array.from({ length: 24 }, (_, i) =>
-    i.toString().padStart(2, '0') + ':00'
-  );
-  const dailyChartData = {
-    labels: dailyLabels,
-    datasets: [
-      {
-        label: 'Producción diaria',
-        data: dailyLabels.map(() => Math.floor(Math.random() * 100) + 50),
-        borderColor: '#82ca9d',
-        backgroundColor: 'rgba(130, 202, 157, 0.5)',
-        tension: 0.4,
-      },
-    ],
-  };
-  const dailyChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: 'Producción por Día' },
-    },
-  };
+  // Obtener la fecha actual
+  const fechaActual = new Date();
+  const añoActual = String(fechaActual.getFullYear());
+  const mesActual = String(fechaActual.getMonth() + 1);
+  const diaActual = String(fechaActual.getDate());
+  // Buscar la opción correspondiente en cada select
+  let defaultYear = yearOptions.find(option => option.value === añoActual);
+  // En caso de que el año actual no se encuentre en yearOptions, lo agrega.
+  if (!defaultYear) {
+    defaultYear = { value: añoActual, label: añoActual };
+    yearOptions.push(defaultYear);
+    // Ordenamos los años (opcional)
+    yearOptions.sort((a, b) => parseInt(a.value) - parseInt(b.value));
+  }
+  const defaultMonth = monthOptions.find(option => option.value === mesActual);
+  const defaultDay = dayOptions.find(option => option.value === diaActual);
+  const [selectedYear, setSelectedYear] = useState(defaultYear);
+  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
+  const [selectedDay, setSelectedDay] = useState(defaultDay);
+  // Estilos personalizados para los selects
   const customStyles = {
-    control: provided => ({
+    control: (provided) => ({
       ...provided,
       borderColor: '#D1D5DB',
       boxShadow: 'none',
@@ -86,16 +83,16 @@ const Graficas = () => {
       height: '40px',
       minHeight: '40px',
     }),
-    valueContainer: provided => ({
+    valueContainer: (provided) => ({
       ...provided,
       height: '40px',
       padding: '0 6px',
     }),
-    indicatorsContainer: provided => ({
+    indicatorsContainer: (provided) => ({
       ...provided,
       height: '40px',
     }),
-    menu: provided => ({
+    menu: (provided) => ({
       ...provided,
       zIndex: 9999,
     }),
@@ -103,8 +100,11 @@ const Graficas = () => {
   return (
     <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
+        {/* Gráfica semanal */}
         <div className="flex justify-end items-center mb-4">
-          <span className="text-sm font-semibold text-gray-700 mr-2">Filtrar por semana:</span>
+          <span className="text-sm font-semibold text-gray-700 mr-2">
+            Filtrar por semana:
+          </span>
           <div className="w-64">
             <Select
               options={weekOptions}
@@ -118,6 +118,7 @@ const Graficas = () => {
         <GraficaSemanal weekChartData={weekChartData} weekChartOptions={weekChartOptions} />
       </div>
       <div>
+        {/* Filtros para la gráfica diaria */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-end gap-4 mb-4">
           <div className="w-48">
             <Select
@@ -147,7 +148,12 @@ const Graficas = () => {
             />
           </div>
         </div>
-        <GraficaDiaria dailyChartData={dailyChartData} dailyChartOptions={dailyChartOptions} />
+        {/* Se envían los filtros necesarios a la gráfica diaria */}
+        <GraficaDiaria
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          selectedDay={selectedDay}
+        />
       </div>
     </div>
   );

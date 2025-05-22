@@ -131,7 +131,7 @@ const RazonesDeMerma = () => {
                       </div>
                       {/* Sección de detalles que se muestra al hacer click */}
                       {expandedItems[keyItem] && (
-                        <div className="p-4 w-full bg-white border border-gray-200 rounded shadow-lg mt-2 max-h-64 overflow-y-auto">
+                        <div className="p-2 w-full bg-white border border-gray-200 rounded shadow-lg mt-2 max-h-64 overflow-y-auto">
                           <h4 className="text-md text-center font-semibold mb-2 text-cyan-600">Detalles</h4>
                           {/* Encabezado de la "tabla" */}
                           <div className="grid grid-cols-4 gap-12 border-b border-gray-300 pb-2 px-2">

@@ -22,7 +22,7 @@ const TablaSurtidoMaquina = ({ columns, finalFilteredData, totalsRow }) => {
             {finalFilteredData.map((row, idx) => (
               <tr
                 key={idx}
-                className={`transition-colors duration-200 hover:bg-blue-50 ${idx % 2 === 0 ? 'bg-blue-50' : 'bg-white'}`}
+                className={`transition-colors duration-200 hover:bg-blue-100 ${idx % 2 === 0 ? 'bg-blue-50' : 'bg-white'}`}
               >
                 {columns.map(col => {
                   let cellValue = row[col.accessor] !== undefined ? row[col.accessor] : '-';

@@ -65,10 +65,10 @@ const Totales_Surtido_Maquina2 = () => {
   };
   const extractBaseName = (name) => {
     const base = name.split('-')[0].trim();
-    console.log("Nombre extraído:", base);
+    /*console.log("Nombre extraído:", base);*/
     return base;
   };
-  
+
   const [metasMapping, setMetasMapping] = useState({});
 
   useEffect(() => {
@@ -92,7 +92,6 @@ const Totales_Surtido_Maquina2 = () => {
       try {
         const response = await clienteAxios.get("/manual/manual/actualdia");
         const registros = response.data.registros || [];
-        console.log("Registros desde API:", registros);
         const now = new Date();
         const currentDateStr = now.toISOString().split("T")[0];
         const yesterday = new Date(now);
@@ -103,7 +102,7 @@ const Totales_Surtido_Maquina2 = () => {
           if (reg.fecha === yesterdayDateStr && reg.hour.slice(0, 5) >= "22:00") return true;
           return false;
         });
-        console.log("Registros filtrados por fecha y hora:", registrosFiltrados);
+        /*console.log("Registros filtrados por fecha y hora:", registrosFiltrados);*/
         const hourSet = new Set();
         registrosFiltrados.forEach(reg => {
           hourSet.add(reg.hour.slice(0, 5));
@@ -121,7 +120,7 @@ const Totales_Surtido_Maquina2 = () => {
         // Si deseas invertir el orden para que los registros más recientes queden a la izquierda,
         // invertimos el arreglo con .reverse()
         allHours.reverse();
-        console.log("Horas únicas ordenadas (invertido):", allHours);
+        /*console.log("Horas únicas ordenadas (invertido):", allHours);*/
         const generatedHourColumns = allHours.map(h => ({
           header: `${h} - ${addOneHour(h)}`,
           accessor: `hour_${h}`,
@@ -137,12 +136,12 @@ const Totales_Surtido_Maquina2 = () => {
           const key = `hour_${reg.hour.slice(0, 5)}`;
           agrupados[baseName][key] = (agrupados[baseName][key] || 0) + Number(reg.hits);
         });
-        console.log("Registros agrupados:", agrupados);
+        /*console.log("Registros agrupados:", agrupados);*/
         const allowedNames = ["19 LENS LOG", "20 LENS LOG"];
         const filtrados = Object.values(agrupados).filter(reg =>
           allowedNames.includes(reg.nombre)
         );
-        console.log("Registros filtrados por nombre permitidos:", filtrados);
+        /*console.log("Registros filtrados por nombre permitidos:", filtrados);*/
         setTableData(filtrados);
       } catch (error) {
         console.error("Error al consultar la API:", error);
