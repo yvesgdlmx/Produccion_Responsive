@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import clienteAxios from '../../../../config/clienteAxios';
+import moment from 'moment';
 const GraficaDiaria = ({ selectedYear, selectedMonth, selectedDay }) => {
   const [dataGrafica, setDataGrafica] = useState(null);
   /* Función para transformar la hora a un valor numérico para ordenar.
@@ -18,19 +19,31 @@ const GraficaDiaria = ({ selectedYear, selectedMonth, selectedDay }) => {
       try {
         const response = await clienteAxios.get(endpoint);
         let registros = response.data.registros;
-        // Ordenar los registros por hora antes de agrupar (opcional)
-        registros.sort((a, b) => transformarHora(a.hour) - transformarHora(b.hour));
-        // Agrupar los registros por hora (tomando los primeros 5 caracteres "HH:MM")
+        // Determinar el inicio y fin del período (22:00:00 del día anterior a 21:59:59 del día seleccionado)
+        const fechaSeleccionada = moment(`${selectedYear.value}-${selectedMonth.value}-${selectedDay.value}`);
+        const inicioPeriodo = fechaSeleccionada.clone().subtract(1, 'day').set({hour: 22, minute: 0, second: 0});
+        const finPeriodo = fechaSeleccionada.clone().set({hour: 21, minute: 59, second: 59});
+        // Filtrar registros dentro del rango de tiempo
+        registros = registros.filter(registro => {
+          const fechaHoraRegistro = moment(`${registro.fecha} ${registro.hour}`, 'YYYY-MM-DD HH:mm:ss');
+          return fechaHoraRegistro.isBetween(inicioPeriodo, finPeriodo, null, '[]');
+        });
+        // Ordenar los registros por hora considerando el cambio de día
+        registros.sort((a, b) => {
+          const horaA = transformarHora(a.hour);
+          const horaB = transformarHora(b.hour);
+          return horaA - horaB;
+        });
+        // Agrupar los registros por hora
         const grupoPorHora = {};
         registros.forEach(registro => {
           const hora = registro.hour.slice(0, 5);
           if (!grupoPorHora[hora]) {
             grupoPorHora[hora] = { hour: hora, hits: 0 };
           }
-          // Sumar los hits de ambos registros ("19 LENS LOG" y "20 LENS LOG")
           grupoPorHora[hora].hits += registro.hits;
         });
-        // Convertir el objeto a array y ordenar las horas agrupadas
+        // Convertir el objeto a array y ordenar las horas
         const registrosAgrupados = Object.values(grupoPorHora).sort((a, b) =>
           transformarHora(a.hour + ':00') - transformarHora(b.hour + ':00')
         );

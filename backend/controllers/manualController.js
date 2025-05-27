@@ -93,7 +93,63 @@ const obtenerRegistrosPorFecha = async (req, res) => {
     }
   };
 
+  const obtenerRegistrosPorSemana = async (req, res) => {
+  try {
+    const { anio, semana } = req.params;
+    
+    // Validar que los parámetros sean números
+    if (!Number(anio) || !Number(semana)) {
+      return res.status(400).json({ error: "El año y la semana deben ser números" });
+    }
+    
+    const lunesSemana = moment().year(Number(anio)).isoWeek(Number(semana)).startOf("isoWeek");
+    const domingoSemana = lunesSemana.clone().endOf("isoWeek"); // domingo de la semana
+    const diaAnterior = lunesSemana.clone().subtract(1, "day"); // domingo inmediatamente anterior
+    
+    // Convertir las fechas a formato "YYYY-MM-DD"
+    const fechaDiaAnterior = diaAnterior.format("YYYY-MM-DD");
+    const fechaInicioSemana = lunesSemana.format("YYYY-MM-DD");
+    const fechaFinSemana = domingoSemana.format("YYYY-MM-DD");
+    
+    // Definir patrones de búsqueda para el campo "name"
+    const patron1 = "19 LENS LOG-SF%";
+    const patron2 = "20 LENS LOG-FIN%";
+    
+    const registros = await Manual.findAll({
+      where: {
+        [Op.and]: [
+          {
+            name: {
+              [Op.or]: [
+                { [Op.like]: patron1 },
+                { [Op.like]: patron2 }
+              ]
+            }
+          },
+          {
+            [Op.or]: [
+              { fecha: fechaDiaAnterior },
+              { fecha: { [Op.between]: [fechaInicioSemana, fechaFinSemana] } }
+            ]
+          }
+        ]
+      },
+      order: [['fecha', 'ASC']]
+    });
+    
+    res.json({ registros });
+  
+  } catch (error) {
+    console.error("Error al obtener registros por semana:", error);
+    res.status(500).json({
+      error: "Error al obtener los registros por semana",
+      detalles: error.message
+    });
+  }
+};
+
 export {
     obtenerRegistrosHoyYAyer,
-    obtenerRegistrosPorFecha
+    obtenerRegistrosPorFecha,
+    obtenerRegistrosPorSemana
 }

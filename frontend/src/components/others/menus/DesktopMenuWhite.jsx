@@ -71,6 +71,11 @@ const DesktopMenuWhite = () => {
                         <p className="block px-4 py-2 hover:bg-gray-100">Facturas</p>
                       </Link>
                     </li>
+                    <li>
+                      <Link to={'/historial_facturas'} onClick={handleMenuItemClick}>
+                        <p className="block px-4 py-2 hover:bg-gray-100">Historial por rangos</p>
+                      </Link>
+                    </li>
                   </ul>
                 </div>
               )}

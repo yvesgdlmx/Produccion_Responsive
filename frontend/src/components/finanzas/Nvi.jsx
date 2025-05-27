@@ -18,6 +18,7 @@ const Nvi = ({ anio, semana }) => {
       fetchData();
     }
   }, [anio, semana]);
+  // Mapeo de cada registro para la tabla
   const data = registros.map((registro) => {
     // Cálculos individuales
     const trabTermNvi = registro.p_frm_f_lenses + registro.m_frm_f_lenses;
@@ -37,21 +38,16 @@ const Nvi = ({ anio, semana }) => {
       parseFloat(registro.p_frm_s) +
       parseFloat(registro.m_frm_s) +
       parseFloat(registro.ar_lenses);
-    // Total NVI fila
     const totalNviFila = terminado + tallado;
-    // Total real y diferencia (se utiliza solo la parte entera)
     const totalReal = parseFloat(registro.total_real) || 0;
     const diferencia = Math.trunc(totalReal - totalNviFila);
-    // Ajuste en tallado: se suma (o resta) la parte entera de la diferencia
     const talladoAjustado = tallado + diferencia;
-    // Ajuste en "trab. NVI HC": se suma la parte entera de la diferencia al valor original (registro.cot_coat)
     const trabNviHC = parseFloat(registro.cot_coat) + Math.trunc(totalReal - totalNviFila);
-    // Se mantiene la lógica para NVI HC (para la columna "$ NVI HC")
     const nuevoNviHC = trabNviHC;
-    // Ajuste en Total Nvi, conservando la parte decimal de (tallado+terminado)
     const parteEnteraTotalReal = Math.floor(totalReal);
     const parteDecimalTotalNvi = totalNviFila - Math.floor(totalNviFila);
     const totalNviCorregido = parteEnteraTotalReal + parteDecimalTotalNvi;
+    
     return {
       semana: registro.semana,
       fecha: registro.fecha,
@@ -63,7 +59,7 @@ const Nvi = ({ anio, semana }) => {
         parseFloat(registro.uv_s_lenses) + parseFloat(registro.uv_f_lenses)
       ),
       nviUV: formatNumber(parseFloat(registro.uv_s) + parseFloat(registro.uv_f)),
-      trabNviHC: formatNumber(trabNviHC),  // Se ha modificado para incluir el ajuste con la diferencia
+      trabNviHC: formatNumber(trabNviHC),
       nviHC: formatNumber(nuevoNviHC),
       trabNviAR: formatNumber(registro.ar_lenses),
       nviAR: formatNumber(parseFloat(registro.ar)),
@@ -71,16 +67,19 @@ const Nvi = ({ anio, semana }) => {
       totalNvi: formatNumber(totalNviCorregido),
     };
   });
-  // Cálculo de totales con ajuste en tallado y NVI HC usando solo la parte entera de la diferencia
+  // Cálculo de totales utilizando los registros originales (sin formateo)
   const totales = registros.reduce(
     (acc, registro) => {
-      const terminado =
+      // Calcular los valores raw para cada registro
+      const trabTerm = registro.p_frm_f_lenses + registro.m_frm_f_lenses;
+      const terminado = 
         parseFloat(registro.p_frm_f) +
         parseFloat(registro.m_frm_f) +
         parseFloat(registro.grad_f) +
         parseFloat(registro.sol_f) +
         parseFloat(registro.uv_f);
-      const tallado =
+      const trabTall = Number(registro.surf_lenses);
+      const tallado = 
         parseFloat(registro.cot_coat) +
         parseFloat(registro.surf_cost) +
         parseFloat(registro.ar) +
@@ -93,30 +92,49 @@ const Nvi = ({ anio, semana }) => {
       const totalFila = terminado + tallado;
       const totalReal = parseFloat(registro.total_real) || 0;
       const diferencia = Math.trunc(totalReal - totalFila);
-      // Ajuste en tallado para el total
-      const talladoAjustado = tallado + diferencia;
-      // Ajuste en trab. NVI HC para el total: se aplica la parte entera de la diferencia al valor de cot_coat
+      const talladoAju = tallado + diferencia;
       const trabNviHC = parseFloat(registro.cot_coat) + Math.trunc(totalReal - totalFila);
-      // Otros cálculos (se mantiene la lógica para NVI UV y NVI AR)
       const nviHC = trabNviHC;
       const nviUV = parseFloat(registro.uv_s) + parseFloat(registro.uv_f);
+      const trabNviAR = Number(registro.ar_lenses);
       const nviAR = parseFloat(registro.ar);
-      acc.terminado += terminado;
-      acc.tallado += talladoAjustado;
-      acc.nviUV += nviUV;
-      acc.nviHC += nviHC;
-      acc.nviAR += nviAR;
-      return acc;
+      const totalTrab = trabTerm + trabTall;
+      const parteEnteraTotalReal = Math.floor(totalReal);
+      const parteDecimalTotalNvi = totalFila - Math.floor(totalFila);
+      const totalNviCorr = parteEnteraTotalReal + parteDecimalTotalNvi;
+      
+      return {
+        trabTermNvi: acc.trabTermNvi + trabTerm,
+        terminado: acc.terminado + terminado,
+        trabTallNvi: acc.trabTallNvi + trabTall,
+        tallado: acc.tallado + talladoAju,
+        trabNviUV: acc.trabNviUV + (parseFloat(registro.uv_s_lenses) + parseFloat(registro.uv_f_lenses)),
+        nviUV: acc.nviUV + nviUV,
+        trabNviHC: acc.trabNviHC + trabNviHC,
+        nviHC: acc.nviHC + nviHC,
+        trabNviAR: acc.trabNviAR + trabNviAR,
+        nviAR: acc.nviAR + nviAR,
+        totalTrab: acc.totalTrab + totalTrab,
+        totalNvi: acc.totalNvi + totalNviCorr,
+      };
     },
     {
+      trabTermNvi: 0,
       terminado: 0,
+      trabTallNvi: 0,
       tallado: 0,
+      trabNviUV: 0,
       nviUV: 0,
+      trabNviHC: 0,
       nviHC: 0,
+      trabNviAR: 0,
       nviAR: 0,
+      totalTrab: 0,
+      totalNvi: 0,
     }
   );
   const totalNviGlobal = totales.terminado + totales.tallado;
+  // Definir las columnas de la tabla
   const columns = [
     { header: "Semana", accessor: "semana" },
     { header: "Fecha", accessor: "fecha" },
@@ -133,6 +151,23 @@ const Nvi = ({ anio, semana }) => {
     { header: "Total trab. Nvi", accessor: "totalTrab" },
     { header: "Total $ Nvi", accessor: "totalNvi" },
   ];
+  // Crear la fila de totales para mostrar en la tabla
+  const totalesRow = {
+    semana: "",
+    fecha: "Totales",
+    trabTermNvi: formatNumber(totales.trabTermNvi),
+    terminado: formatNumber(totales.terminado),
+    trabTallNvi: formatNumber(totales.trabTallNvi),
+    tallado: formatNumber(totales.tallado),
+    trabNviUV: formatNumber(totales.trabNviUV),
+    nviUV: formatNumber(totales.nviUV),
+    trabNviHC: formatNumber(totales.trabNviHC),
+    nviHC: formatNumber(totales.nviHC),
+    trabNviAR: formatNumber(totales.trabNviAR),
+    nviAR: formatNumber(totales.nviAR),
+    totalTrab: formatNumber(totales.totalTrab),
+    totalNvi: formatNumber(totales.totalNvi),
+  };
   return (
     <div className="mb-8">
       {registros.length > 0 && (
@@ -141,49 +176,7 @@ const Nvi = ({ anio, semana }) => {
             NVI
           </h2>
           <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <TablaGenerica columns={columns} data={data} />
-            <div className="mt-6 border-t border-gray-200 pt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
-                  <p className="text-gray-500 font-medium text-sm">$ Terminado</p>
-                  <p className="text-2xl font-semibold text-cyan-600">
-                    {formatNumber(totales.terminado)}
-                  </p>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
-                  <p className="text-gray-500 font-medium text-sm">$ Tallado</p>
-                  <p className="text-2xl font-semibold text-cyan-600">
-                    {formatNumber(totales.tallado)}
-                  </p>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
-                  <p className="text-gray-500 font-medium text-sm">$ NVI UV</p>
-                  <p className="text-2xl font-semibold text-cyan-600">
-                    {formatNumber(totales.nviUV)}
-                  </p>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
-                  <p className="text-gray-500 font-medium text-sm">$ NVI HC</p>
-                  <p className="text-2xl font-semibold text-cyan-600">
-                    {formatNumber(totales.nviHC)}
-                  </p>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
-                  <p className="text-gray-500 font-medium text-sm">$ NVI AR</p>
-                  <p className="text-2xl font-semibold text-cyan-600">
-                    {formatNumber(totales.nviAR)}
-                  </p>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
-                  <p className="text-gray-500 font-medium text-sm">
-                    Total $ NVI
-                  </p>
-                  <p className="text-2xl font-semibold text-cyan-600">
-                    {formatNumber(totalNviGlobal)}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <TablaGenerica columns={columns} data={data} totalesRow={totalesRow} />
           </div>
         </>
       )}

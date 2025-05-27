@@ -2,8 +2,7 @@ import { Op, fn, col, where } from "sequelize";
 import FacturacionNvi from "../models/FacturacionNvi.js";
 import FacturacionHoya from "../models/FacturacionHoya.js";
 import FacturacionInk from "../models/FacturacionInk.js";
-// Asegúrate de importar tu instancia de Sequelize si es necesario, por ejemplo:
-// import sequelize from "../config/db.js";
+
 const obtenerRegistrosNvi = async (req, res) => {
   const { anio, semana } = req.params;
   try {
@@ -19,6 +18,24 @@ const obtenerRegistrosNvi = async (req, res) => {
   } catch (error) {
     console.error("Error al obtener registros de FacturacionNvi:", error);
     res.status(500).json({ error: "Error al obtener los registros de facturacion_nvi" });
+  }
+};
+
+const obtenerRegistrosNviPorRangoFechas = async (req, res) => {
+  const { fechaDeInicio, fechaFin } = req.params;
+  try {
+    const registros = await FacturacionNvi.findAll({
+      where: {
+        fecha: {
+          [Op.between]: [fechaDeInicio, fechaFin]
+        }
+      },
+      order: [['fecha', 'DESC']]
+    });
+    res.json({ registros });
+  } catch (error) {
+    console.error("Error al obtener registros de FacturacionNvi por rango de fechas:", error);
+    res.status(500).json({ error: "Error al obtener los registros de facturacion_nvi por rango de fechas" });
   }
 };
 
@@ -40,6 +57,24 @@ const obtenerRegistrosHoya= async (req, res) => {
   }
 };
 
+const obtenerRegistrosHoyaPorRangoFechas = async (req, res) => {
+  const { fechaDeInicio, fechaFin } = req.params;
+  try {
+    const registros = await FacturacionHoya.findAll({
+      where: {
+        fecha: {
+          [Op.between]: [fechaDeInicio, fechaFin]
+        }
+      },
+      order: [['fecha', 'DESC']]
+    });
+    res.json({ registros });
+  } catch (error) {
+    console.error("Error al obtener registros de FacturacionHoya por rango de fechas:", error);
+    res.status(500).json({ error: "Error al obtener los registros de FacturacionHoya por rango de fechas" });
+  }
+};
+
 const obtenerRegistrosInk = async (req, res) => {
   const { anio, semana } = req.params;
   try {
@@ -58,8 +93,29 @@ const obtenerRegistrosInk = async (req, res) => {
   }
 };
 
+const obtenerRegistrosInkPorRangoFechas = async (req, res) => {
+  const { fechaDeInicio, fechaFin } = req.params;
+  try {
+    const registros = await FacturacionInk.findAll({
+      where: {
+        ShipDate: {
+          [Op.between]: [fechaDeInicio, fechaFin]
+        }
+      },
+      order: [['ShipDate', 'DESC']]
+    });
+    res.json({ registros });
+  } catch (error) {
+    console.error("Error al obtener registros de FacturacionInk por rango de fechas:", error);
+    res.status(500).json({ error: "Error al obtener los registros de FacturacionInk por rango de fechas" });
+  }
+};
+
 export {
   obtenerRegistrosNvi,
   obtenerRegistrosHoya,
-  obtenerRegistrosInk
+  obtenerRegistrosInk,
+  obtenerRegistrosNviPorRangoFechas,
+  obtenerRegistrosHoyaPorRangoFechas,
+  obtenerRegistrosInkPorRangoFechas
 }

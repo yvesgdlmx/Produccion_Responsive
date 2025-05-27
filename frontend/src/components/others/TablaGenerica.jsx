@@ -1,5 +1,5 @@
 import React from 'react';
-const TablaGenerica = ({ columns, data }) => {
+const TablaGenerica = ({ columns, data, totalesRow }) => {
   return (
     <table className="min-w-full bg-white border rounded-lg shadow-lg text-sm">
       <thead>
@@ -29,6 +29,15 @@ const TablaGenerica = ({ columns, data }) => {
             ))}
           </tr>
         ))}
+        {totalesRow && (
+          <tr className="font-bold bg-green-100 border-t">
+            {columns.map((col) => (
+              <td key={col.accessor} className="py-3 px-5 border text-gray-500">
+                {totalesRow[col.accessor] ?? ''}
+              </td>
+            ))}
+          </tr>
+        )}
       </tbody>
     </table>
   );
