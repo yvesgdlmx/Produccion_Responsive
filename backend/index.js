@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import db from './config/db.js';
+import fs from 'fs';
+import path from 'path';
 import registroRoutes from './routes/registroRoutes.js';
 import bloqueoTalladoRoutes from './routes/bloqueoTalladoRoutes.js';
 import pulidoRoutes from './routes/pulidoRoutes.js';
@@ -27,11 +29,20 @@ import reporteResumenRoutes from './routes/reporteResumenRoutes.js'
 import trabajosSinMovimientosRoutes from './routes/trabajosSinMovimientosRoutes.js'
 import facturacionRoutes from './routes/facturacionRoutes.js'
 import mermasRoutes from './routes/mermasRoutes.js'
+import mediaRoutes from './routes/mediaRoutes.js';
 
 const app = express();
 app.use(express.json());
 
 dotenv.config();
+
+// Configurar y asegurar que la carpeta "uploads" exista
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+  console.log('Carpeta "uploads" creada');
+}
+app.use('/uploads', express.static('uploads'));
 
 // Conexion a la base de datos 
 try {
@@ -42,21 +53,23 @@ try {
     console.log(error);
 }
 
-//Configurar CORS
+// Configurar CORS
 const whitelist = [process.env.FRONTEND_URL];
-
 const corsOptions = {
-  origin: function (origin, callback) {
+  origin: (origin, callback) => {
+    // Si no hay origin (por ejemplo, en requests desde herramientas como Postman),
+    // se permite la petición.
+    if (!origin) return callback(null, true);
+    
+    console.log('Origin de la petición:', origin);
+    
     if (whitelist.includes(origin)) {
-      // Puede consultar la API
-     callback(null, true);
+      callback(null, true);
     } else {
-      // No esta permitido
-      callback(new Error("Error de Cors"));
+      callback(new Error('Error de Cors'));
     }
   },
 };
-
 app.use(cors(corsOptions));
 
 //Routing
@@ -91,6 +104,8 @@ app.use('/api/reportes', trabajosSinMovimientosRoutes)
 app.use('/api/reportes', facturacionRoutes)
 /* Rutas para mermas */
 app.use('/api/mermas', mermasRoutes)
+/* Rutas para Media (imagenes y videos) */
+app.use('/api/media', mediaRoutes);
 
 const PORT = process.env.PORT || 3000;
 const servidor = app.listen(PORT, () => {
