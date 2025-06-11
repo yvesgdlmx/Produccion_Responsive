@@ -1,6 +1,5 @@
 import { DataTypes } from "sequelize";
 import db from "../config/db.js";
-
 const ReportesResumenComp = db.define('resumen_nvis', {
     id: {
         type: DataTypes.INTEGER,
@@ -31,7 +30,6 @@ const ReportesResumenComp = db.define('resumen_nvis', {
         allowNull: true,
         defaultValue: 0
     },
-    // Nuevas columnas añadidas aquí
     no_surtido_term: {
         type: DataTypes.INTEGER,
         allowNull: true,
@@ -82,6 +80,16 @@ const ReportesResumenComp = db.define('resumen_nvis', {
         allowNull: true,
         defaultValue: 0
     },
+    no_surtido_ar_semi: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+    },
+    no_surtido_sin_ar_semi: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: 0
+    },
     fecha_insercion: {
         type: DataTypes.DATE,
         allowNull: true,
@@ -95,5 +103,4 @@ const ReportesResumenComp = db.define('resumen_nvis', {
 }, {
     timestamps: false
 });
-
 export default ReportesResumenComp;
