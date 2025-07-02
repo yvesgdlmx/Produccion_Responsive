@@ -33,7 +33,7 @@ const MobileMenu = ({
         </div>
         <nav className="px-4 py-2">
           <ul className="space-y-2">
-             {auth && auth.id && (
+            {auth && auth.id && (
               <li>
                 <Link
                   to="/cargar_media"
@@ -61,7 +61,7 @@ const MobileMenu = ({
                 {[
                   { to: "/mermas_por_hora", label: "Mermas por hora" },
                 ].map((item, index) => (
-                  <li key={index}>
+                   <li key={index}>
                     <Link
                       to={item.to}
                       onClick={handleMenuItemClick}
