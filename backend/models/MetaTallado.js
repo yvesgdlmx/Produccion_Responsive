@@ -5,7 +5,15 @@ const MetaTallado = db.define('metas_tallados', {
     name: {
         type: DataTypes.STRING
     },
-    meta: {
+     meta_nocturno: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    meta_matutino: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    meta_vespertino: {
         type: DataTypes.INTEGER,
         allowNull: false
     }

@@ -5,7 +5,15 @@ const MetaEngraver = db.define('metas_engravers', {
     name: {
         type: DataTypes.STRING
     },
-    meta: {
+     meta_nocturno: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    meta_matutino: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    meta_vespertino: {
         type: DataTypes.INTEGER,
         allowNull: false
     }

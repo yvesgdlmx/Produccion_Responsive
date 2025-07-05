@@ -1,18 +1,23 @@
 import { DataTypes } from "sequelize";
 import db from "../config/db.js";
-
 const MetaManual = db.define('metas_manuales', {
     name: {
         type: DataTypes.STRING
     },
-    meta: {
+    meta_nocturno: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    meta_matutino: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+    },
+    meta_vespertino: {
         type: DataTypes.INTEGER,
         allowNull: false
     }
 },
-    {
-        timestamps: false
-    }
-);
-
+{
+    timestamps: false
+});
 export default MetaManual;
