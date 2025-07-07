@@ -101,8 +101,8 @@ const Produccion_Procesos = () => {
         if (ahora.isAfter(inicioNocturno)) {
           horasTranscurridas = ahora.diff(inicioNocturno, 'hours', true);
         }
-        // Usamos la meta base nocturna para calcular la meta en vivo.
-        setMeta(Math.round(horasTranscurridas) * metaPorHora);
+        // Reemplazamos Math.round por Math.floor para contabilizar solo las horas completas.
+        setMeta(Math.floor(horasTranscurridas) * metaPorHora);
         // 7. Obtener el último registro para determinar el corte de la siguiente media hora
         const ultimoRegistro = registros.reduce((ultimo, actual) => {
           const horaActual = moment.tz(
@@ -142,7 +142,7 @@ const Produccion_Procesos = () => {
       </Link>
       <Link to='/totales_estacion?seccion=produccion' className='block lg:hidden'>
         <div className='bg-blue-500 p-2 mb-2 flex items-center justify-between'>
-          <h2 className='text-white font-bold uppercase'>Produccion</h2>
+          <h2 className='text-white font-bold uppercase'>Producción</h2>
           <img src="/img/arrow.png" alt="ver" width={25} style={{ filter: 'invert(100%)' }} className='relative' />
         </div>
       </Link>
