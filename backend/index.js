@@ -36,16 +36,13 @@ app.use(express.json());
 
 dotenv.config();
 
-// Verificar que la carpeta "uploads" exista; si no, crearla.
+// Configurar y asegurar que la carpeta "uploads" exista
 const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+  fs.mkdirSync(uploadsDir);
   console.log('Carpeta "uploads" creada');
-} else {
-  console.log('Carpeta "uploads" ya existe');
 }
-// Servir archivos estáticos desde la carpeta "uploads"
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', express.static('uploads'));
 
 // Conexion a la base de datos 
 try {
