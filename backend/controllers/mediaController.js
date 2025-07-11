@@ -26,16 +26,22 @@ export const obtenerMedia = async (req, res) => {
 export const crearMedia = async (req, res) => {
   const { descripcion } = req.body;
   const archivo = req.file;
+  
   if (!archivo) {
     return res.status(400).json({ error: 'No se ha subido ningún archivo' });
   }
   try {
+    // Crear registro en la base de datos
     const nuevaMedia = await Media.create({
       nombre: archivo.filename,
       descripcion,
       estado: true,
+      ruta: `/uploads/${archivo.filename}` // Guardamos la ruta relativa
     });
-    res.status(201).json(nuevaMedia);
+    res.status(201).json({
+      ...nuevaMedia.toJSON(),
+      url: `${process.env.BACKEND_URL}/uploads/${archivo.filename}` // Devolvemos la URL completa
+    });
   } catch (error) {
     console.error('Error al crear el archivo:', error);
     res.status(400).json({ error: 'Error al crear el archivo' });
