@@ -13,6 +13,10 @@ const Totales_HardCoat_Estacion = () => {
     vespertino: 0,
     nocturno: 0,
   });
+  // Estados para el sistema de notas
+  const [notas, setNotas] = useState({});
+  const [notaActiva, setNotaActiva] = useState(null);
+  const [editingNota, setEditingNota] = useState("");
   // Arreglo fijo con el orden de los buckets de hora
   const ordenTurnos = [
     "21:30", "20:30", "19:30", "18:30", "17:30", "16:30", "15:30", "14:30", // Vespertino
@@ -60,6 +64,8 @@ const Totales_HardCoat_Estacion = () => {
       }
     };
     obtenerRegistros();
+    // Cargar las notas para la sección hardcoat
+    cargarNotas();
   }, []);
   const calcularTotalesPorTurno = (registros, inicioHoy) => {
     const totales = {
@@ -72,7 +78,7 @@ const Totales_HardCoat_Estacion = () => {
         `${registro.fecha} ${registro.hour}`,
         "YYYY-MM-DD HH:mm:ss"
       );
-      // Turno Nocturno: 22:00 a 05:59
+      // Turno Nocturno: 22:00 a 05:59 (se toma de inicioHoy a +8h)
       if (
         fechaHoraRegistro.isBetween(
           inicioHoy.clone(),
@@ -151,12 +157,9 @@ const Totales_HardCoat_Estacion = () => {
   };
   /*  
     Función que devuelve el valor a mostrar para cada bucket:
-    - Si hay registro en hitsPorHora, lo muestra.
-    - Si no existe, se verifica si el bucket ya debió haber cerrado.
-      Se calcula bucketInicio y bucketFin (bucketFin = bucketInicio + 1 hora).
-      Se agrega un margen de 5 minutos.
-    - Si la hora ya pasó (incluso sin registro), se devuelve 0.
-    - Si la hora aún no debió cerrar, se devuelve "" para posteriormente filtrar la columna.
+      - Si hay registro en hitsPorHora, se muestra ese valor.
+      - Si no existe, se verifica si el bucket ya debió haber cerrado (con un margen de 5 minutos).
+        Si ya pasó se retorna 0; de lo contrario se retorna una cadena vacía.
   */
   const getDisplayValue = (horaStr) => {
     if (hitsPorHora[horaStr] !== undefined) return hitsPorHora[horaStr];
@@ -178,9 +181,80 @@ const Totales_HardCoat_Estacion = () => {
       valor: getDisplayValue(hora),
     }))
     .filter((col) => col.valor !== "");
-  // Función para asignar una clase según se cumpla (se puede ampliar en caso de tener metas)
-  const getClassName = (hits, meta) =>
-    hits >= meta ? "text-green-500" : "text-red-500";
+  // Función para asignar una clase (por ejemplo, para resaltar en verde o rojo)
+  const getClassName = (hits, meta) => (parseInt(hits, 10) >= meta ? "text-green-500" : "text-red-500");
+  // --- Funciones para el manejo de notas ---
+  // Función para mostrar/ocultar el recuadro de nota en la celda seleccionada
+  const toggleNota = (hora) => {
+    if (notaActiva === hora) {
+      setNotaActiva(null);
+    } else {
+      setNotaActiva(hora);
+      setEditingNota(notas[hora]?.nota || "");
+    }
+  };
+  // Función para guardar una nueva nota (POST) para la sección "hardcoat"
+  const handleGuardarNota = async (hora) => {
+    try {
+      const today = moment().format("YYYY-MM-DD");
+      const payload = {
+        fecha: today,
+        hora,
+        seccion: "hardcoat", // Se define la sección correspondiente
+        nota: editingNota,
+      };
+      const response = await clienteAxios.post("/notas/notas", payload);
+      setNotas((prev) => ({
+        ...prev,
+        [hora]: { id: response.data.id, nota: response.data.nota },
+      }));
+      setNotaActiva(null);
+    } catch (error) {
+      console.error("Error al guardar la nota:", error);
+    }
+  };
+  // Función para editar una nota existente (PUT)
+  const handleEditarNota = async (hora) => {
+    try {
+      const notaActual = notas[hora];
+      if (!notaActual || !notaActual.id) {
+        console.error("No se encontró la nota para la hora:", hora);
+        return;
+      }
+      const payload = {
+        id: notaActual.id,
+        nota: editingNota,
+      };
+      const response = await clienteAxios.put("/notas/notas", payload);
+      setNotas((prev) => ({
+        ...prev,
+        [hora]: { id: response.data.id, nota: response.data.nota },
+      }));
+      setNotaActiva(null);
+    } catch (error) {
+      console.error("Error al editar la nota:", error);
+    }
+  };
+  // Función para cargar las notas existentes (GET) para la sección "hardcoat"
+  const cargarNotas = async () => {
+    try {
+      const today = moment().format("YYYY-MM-DD");
+      const response = await clienteAxios.get("/notas/notas", {
+        params: { seccion: "hardcoat", fecha: today },
+      });
+      const notasMap = {};
+      if (Array.isArray(response.data)) {
+        response.data.forEach((item) => {
+          notasMap[item.hora] = { id: item.id, nota: item.nota };
+        });
+      } else {
+        console.error("La respuesta de la API no es un array:", response.data);
+      }
+      setNotas(notasMap);
+    } catch (error) {
+      console.error("Error al cargar las notas:", error);
+    }
+  };
   return (
     <div className="max-w-screen-xl rounded-lg">
       {/* Versión para pantallas grandes */}
@@ -202,10 +276,7 @@ const Totales_HardCoat_Estacion = () => {
           <tbody>
             <tr className="font-semibold text-gray-700">
               <td>
-                <Link
-                  to={"/totales_hardcoat_maquina"}
-                  className="link__tabla"
-                >
+                <Link to={"/totales_hardcoat_maquina"} className="link__tabla">
                   <div className="flex items-center justify-center hover:scale-105 transition-transform duration-300">
                     <img
                       src="./img/ver.png"
@@ -222,9 +293,59 @@ const Totales_HardCoat_Estacion = () => {
               {columnas.map((col, i) => (
                 <td
                   key={i}
-                  className="py-2 px-4 border-b font-bold border-l-2 border-gray-200 min-w-[150px] whitespace-nowrap text-center"
+                  className="py-2 px-4 border-b font-bold border-l-2 border-gray-200 min-w-[150px] whitespace-nowrap text-center relative"
+                  onClick={() => toggleNota(col.hora)}
                 >
                   <span>{col.valor}</span>
+                  {notaActiva === col.hora && (
+                    <div
+                      className="absolute top-[-10px] left-0 z-50 bg-gray-100 p-4 border rounded shadow-md w-64 h-24 text-xs"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <textarea
+                        className="w-full h-16 p-1 border mb-2 text-xs"
+                        value={editingNota}
+                        onChange={(e) => setEditingNota(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          disabled={!!notas[col.hora]?.nota}
+                          className={`py-1 px-3 rounded text-xs ${
+                            notas[col.hora]?.nota
+                              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                              : "bg-green-500 text-white hover:bg-green-600"
+                          }`}
+                          onClick={(e) => {
+                            if (!notas[col.hora]?.nota) {
+                              e.stopPropagation();
+                              handleGuardarNota(col.hora);
+                            }
+                          }}
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          className="bg-blue-500 text-white py-1 px-3 rounded text-xs hover:bg-blue-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditarNota(col.hora);
+                          }}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="bg-red-500 text-white py-1 px-3 rounded text-xs hover:bg-red-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNotaActiva(null);
+                          }}
+                        >
+                          Cerrar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </td>
               ))}
             </tr>
@@ -267,19 +388,76 @@ const Totales_HardCoat_Estacion = () => {
           </div>
           <div className="py-4">
             <span className="font-bold text-gray-700">Horas:</span>
-            {columnas.map((col, idx) => (
-              <div
-                key={idx}
-                className={`flex justify-between py-2 px-4 ${
-                  idx % 2 === 0 ? "bg-slate-200" : "bg-slate-300"
-                }`}
-              >
-                <span className="font-bold text-gray-700">
-                  {col.rango}:
-                </span>
-                <span className="font-bold">{col.valor}</span>
-              </div>
-            ))}
+            {columnas.map((col, idx) => {
+              return (
+                <div
+                  key={idx}
+                  className={`flex flex-col py-2 px-4 ${
+                    idx % 2 === 0 ? "bg-slate-200" : "bg-slate-300"
+                  }`}
+                  // Ahora el onClick se ubica sólo en la fila principal
+                >
+                  {/* Fila principal */}
+                  <div
+                    className="flex justify-between items-center cursor-pointer"
+                    onClick={() => toggleNota(col.hora)}
+                  >
+                    <span className="font-bold text-gray-700">{col.rango}:</span>
+                    <span className="font-bold">{col.valor}</span>
+                  </div>
+                  {/* Si la nota está activa, se muestra en un bloque que empuja hacia abajo el contenido */}
+                  {notaActiva === col.hora && (
+                    <div
+                      className="mt-2 bg-gray-100 p-4 border rounded shadow-md w-full text-xs"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <textarea
+                        className="w-full h-16 p-1 border mb-2 text-xs"
+                        value={editingNota}
+                        onChange={(e) => setEditingNota(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          disabled={!!notas[col.hora]?.nota}
+                          className={`py-1 px-3 rounded text-xs ${
+                            notas[col.hora]?.nota
+                              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                              : "bg-green-500 text-white hover:bg-green-600"
+                          }`}
+                          onClick={(e) => {
+                            if (!notas[col.hora]?.nota) {
+                              e.stopPropagation();
+                              handleGuardarNota(col.hora);
+                            }
+                          }}
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          className="bg-blue-500 text-white py-1 px-3 rounded text-xs hover:bg-blue-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditarNota(col.hora);
+                          }}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="bg-red-500 text-white py-1 px-3 rounded text-xs hover:bg-red-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setNotaActiva(null);
+                          }}
+                        >
+                          Cerrar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
           <div className="flex justify-center mt-4">
             <Link
@@ -291,12 +469,9 @@ const Totales_HardCoat_Estacion = () => {
               </button>
             </Link>
           </div>
-          {/* Totales por turno para pantallas pequeñas y medianas */}
+          {/* Totales por turno (Mobile) */}
           <div className="mt-6 border-t pt-4">
             <div className="bg-green-50 p-4 rounded-lg shadow-md">
-              <h4 className="font-semibold text-green-700 mb-2">
-                Totales por Turno
-              </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <span className="block text-gray-600">Nocturno: </span>
