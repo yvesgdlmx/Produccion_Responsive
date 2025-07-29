@@ -43,6 +43,15 @@ const MobileMenu = ({
             )}
             <li>
               <Link
+                to="/procesos_LA"
+                onClick={handleMenuItemClick}
+                className="block py-2 px-3 text-white uppercase hover:bg-gray-600"
+              >
+                Producción LA
+              </Link>
+            </li>
+            <li>
+              <Link
                 to="/"
                 onClick={handleMenuItemClick}
                 className="block py-2 px-3 text-white uppercase hover:bg-gray-600"
