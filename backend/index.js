@@ -31,6 +31,7 @@ import facturacionRoutes from './routes/facturacionRoutes.js'
 import mermasRoutes from './routes/mermasRoutes.js'
 import mediaRoutes from './routes/mediaRoutes.js';
 import notasRoutes from './routes/notasRoutes.js'
+import notasTurnosRoutes from './routes/notasTurnosRoutes.js'
 
 const app = express();
 app.use(express.json());
@@ -109,6 +110,7 @@ app.use('/api/mermas', mermasRoutes)
 app.use('/api/media', mediaRoutes);
 /* Rutas para notas */
 app.use('/api/notas', notasRoutes);
+app.use('/api/notas', notasTurnosRoutes);
 
 const PORT = process.env.PORT || 3000;
 const servidor = app.listen(PORT, () => {
