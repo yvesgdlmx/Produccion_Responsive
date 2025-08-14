@@ -182,7 +182,7 @@ const Produccion_Procesos = () => {
       const payload = {
         fecha: today,
         turno, // "nocturno", "matutino" o "vespertino"
-        seccion: "produccion",
+        seccion: "producción",
         comentario: editingTurnoNota,
       };
       const response = await clienteAxios.post("/notas/notas_turnos", payload);
