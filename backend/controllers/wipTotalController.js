@@ -81,7 +81,42 @@ const obtenerRazones = async (req, res) => {
          res.json(respuesta);
 }
 
+const obtenerWipTotalPorRango = async (req, res) => {
+    const { anioInicio, mesInicio, diaInicio, anioFin, mesFin, diaFin } = req.params;
+    try {
+        // Crear fechas de inicio y fin en formato 'YYYY-MM-DD'
+        const fechaInicio = moment.tz(`${anioInicio}-${mesInicio}-${diaInicio}`, 'America/Mexico_City').startOf('day').toDate();
+        const fechaFin = moment.tz(`${anioFin}-${mesFin}-${diaFin}`, 'America/Mexico_City').endOf('day').toDate();
+
+        // Buscar registros en el rango
+        const registros = await WipTotal.findAll({
+            where: {
+                fecha: {
+                    [Op.gte]: fechaInicio,
+                    [Op.lte]: fechaFin
+                }
+            }
+        });
+
+        if (!registros.length) {
+            return res.status(404).json({ message: "No se encontraron registros en el rango de fechas." });
+        }
+
+        // Formatear fechas
+        const registrosFormateados = registros.map(registro => ({
+            ...registro.toJSON(),
+            fecha: moment(registro.fecha).tz('America/Mexico_City').format('YYYY-MM-DD')
+        }));
+
+        res.json({ registros: registrosFormateados });
+    } catch (error) {
+        console.error("Error al obtener registros por rango:", error);
+        res.status(500).json({ error: "Error al obtener registros por rango de fechas" });
+    }
+};
+
 export { 
     obtenerWipTotal, 
-    obtenerRazones
+    obtenerRazones,
+    obtenerWipTotalPorRango
 }

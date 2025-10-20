@@ -30,11 +30,6 @@ const obtenerRegistrosHoyYAyer = async (req, res) => {
                                 }
                             }
                         ]
-                    },
-                    {
-                        name: {
-                            [Op.notLike]: '256 POLISHR 2-%' // Excluir nombres que comienzan con "256 POLISHR 2-"
-                        }
                     }
                 ]
             }

@@ -148,8 +148,55 @@ const obtenerRegistrosPorFecha = async (req, res) => {
   }
 };
 
+const obtenerRegistrosJobCompleteSemana = async (req, res) => {
+  try {
+    const ahora = moment().tz('America/Mexico_City');
+    let inicioSemana, finSemana, domingoAnteriorInicio, domingoAnteriorFin;
+
+    if (ahora.day() === 0 && ahora.hour() < 22) {
+      // Domingo antes de las 22:00, seguimos en la semana anterior
+      inicioSemana = ahora.clone().subtract(1, 'week').startOf('week').add(22, 'hours');
+    } else {
+      // Cualquier otro día, o domingo después de las 22:00
+      inicioSemana = ahora.clone().startOf('week').add(22, 'hours');
+    }
+    finSemana = inicioSemana.clone().add(6, 'days').add(23, 'hours').add(59, 'minutes').add(59, 'seconds');
+
+    // Domingo anterior completo (00:00 a 23:59:59)
+    domingoAnteriorInicio = inicioSemana.clone().startOf('day');
+    domingoAnteriorFin = domingoAnteriorInicio.clone().add(23, 'hours').add(59, 'minutes').add(59, 'seconds');
+
+    const registros = await Manual.findAll({
+      where: {
+        name: { [Op.like]: "32 JOB COMPLETE%" },
+        [Op.or]: [
+          {
+            fecha: {
+              [Op.gte]: inicioSemana.format('YYYY-MM-DD HH:mm:ss'),
+              [Op.lte]: finSemana.format('YYYY-MM-DD HH:mm:ss')
+            }
+          },
+          {
+            fecha: {
+              [Op.gte]: domingoAnteriorInicio.format('YYYY-MM-DD HH:mm:ss'),
+              [Op.lte]: domingoAnteriorFin.format('YYYY-MM-DD HH:mm:ss')
+            }
+          }
+        ]
+      },
+      order: [['fecha', 'ASC']]
+    });
+
+    res.json({ registros });
+  } catch (error) {
+    console.error("Error al obtener los registros de la semana laboral:", error);
+    res.status(500).json({ error: "Error al obtener los registros de la semana laboral" });
+  }
+};
+
 export {
     obtenerRegistrosHoyYAyer,
     obtenerRegistrosPorFecha,
-    obtenerRegistrosPorSemana
-}
+    obtenerRegistrosPorSemana,
+    obtenerRegistrosJobCompleteSemana
+};
