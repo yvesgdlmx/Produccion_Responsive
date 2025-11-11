@@ -151,38 +151,34 @@ const obtenerRegistrosPorFecha = async (req, res) => {
 const obtenerRegistrosJobCompleteSemana = async (req, res) => {
   try {
     const ahora = moment().tz('America/Mexico_City');
-    let inicioSemana, finSemana, domingoAnteriorInicio, domingoAnteriorFin;
 
-    if (ahora.day() === 0 && ahora.hour() < 22) {
-      // Domingo antes de las 22:00, seguimos en la semana anterior
-      inicioSemana = ahora.clone().subtract(1, 'week').startOf('week').add(22, 'hours');
+    // Calcular el sábado 22:00 de la semana correspondiente
+    const sabadoEstaSemana = ahora.clone().startOf('week').add(6, 'days'); // sábado 00:00
+    const sabadoEstaSemana22 = sabadoEstaSemana.clone().add(22, 'hours'); // sábado 22:00
+
+    let inicioSemana;
+    if (ahora.isBefore(sabadoEstaSemana22)) {
+      inicioSemana = sabadoEstaSemana22.clone().subtract(1, 'week');
     } else {
-      // Cualquier otro día, o domingo después de las 22:00
-      inicioSemana = ahora.clone().startOf('week').add(22, 'hours');
+      inicioSemana = sabadoEstaSemana22;
     }
-    finSemana = inicioSemana.clone().add(6, 'days').add(23, 'hours').add(59, 'minutes').add(59, 'seconds');
+    const finSemana = inicioSemana.clone().add(7, 'days').subtract(1, 'seconds'); // siguiente sábado 21:59:59
 
-    // Domingo anterior completo (00:00 a 23:59:59)
-    domingoAnteriorInicio = inicioSemana.clone().startOf('day');
-    domingoAnteriorFin = domingoAnteriorInicio.clone().add(23, 'hours').add(59, 'minutes').add(59, 'seconds');
+    // Construir literal que concatena fecha + hour (usa COALESCE para manejar nulls)
+    const datetimeLiteral = Sequelize.literal("CAST(CONCAT(fecha, ' ', COALESCE(hour, '00:00:00')) AS DATETIME)");
 
     const registros = await Manual.findAll({
       where: {
         name: { [Op.like]: "32 JOB COMPLETE%" },
-        [Op.or]: [
+        [Op.and]: Sequelize.where(
+          datetimeLiteral,
           {
-            fecha: {
-              [Op.gte]: inicioSemana.format('YYYY-MM-DD HH:mm:ss'),
-              [Op.lte]: finSemana.format('YYYY-MM-DD HH:mm:ss')
-            }
-          },
-          {
-            fecha: {
-              [Op.gte]: domingoAnteriorInicio.format('YYYY-MM-DD HH:mm:ss'),
-              [Op.lte]: domingoAnteriorFin.format('YYYY-MM-DD HH:mm:ss')
-            }
+            [Op.between]: [
+              inicioSemana.format('YYYY-MM-DD HH:mm:ss'),
+              finSemana.format('YYYY-MM-DD HH:mm:ss')
+            ]
           }
-        ]
+        )
       },
       order: [['fecha', 'ASC']]
     });

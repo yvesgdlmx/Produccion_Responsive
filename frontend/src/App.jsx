@@ -46,6 +46,8 @@ const MermaPorHora = lazy(() => import('./paginas/mermas/MermaPorHora'));
 const CargarMedia = lazy(() => import('./paginas/CargarMedia'));
 const EditarMetas = lazy(() => import('./paginas/metas/EditarMetas'))
 const FracttalProcesos = lazy(() => import('./paginas/fracttal/FracttalProcesos'))
+const Pruebas = lazy(() => import('./paginas/Pruebas'));
+const ResumenArTrabajos = lazy(() => import('./paginas/reportes/ResumenArTrabajos'));
 
 function App() {
   return (
@@ -85,10 +87,12 @@ function App() {
                   <Route path='/reportes_wip_diario' element={<ReporteWipDiario />} />
                   <Route path='/reportes_trabajos_enviados' element={<ReportesTrabajosEnviados />} />
                   <Route path='/reportes_resumen_trabajo' element={<ResumenTrabajo/>} />
+                  <Route path='/reportes_ar_resumen_trabajos' element={<ResumenArTrabajos/>} />
                   <Route path='/reportes_trabajos_sin_movimientos' element={<ReporteTrabajosSinMovimientos/>} />
                   <Route path='/reportes_de_flujo' element={<ReporteDeFlujo/>} />
                   <Route path='/mermas_por_hora' element={<MermaPorHora/>} />
                   <Route path='/fracttal_procesos' element={<FracttalProcesos/>} />
+                  <Route path='/pruebas' element={<Pruebas/>} />
                   <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                     <Route path='/finanzas_facturas' element={<Facturas/>} />
                     <Route path='/historial_facturas' element={<HistorialFacturas/>} />
