@@ -48,6 +48,8 @@ const EditarMetas = lazy(() => import('./paginas/metas/EditarMetas'))
 const FracttalProcesos = lazy(() => import('./paginas/fracttal/FracttalProcesos'))
 const Pruebas = lazy(() => import('./paginas/Pruebas'));
 const ResumenArTrabajos = lazy(() => import('./paginas/reportes/ResumenArTrabajos'));
+const ResumenDeResultado = lazy(() => import('./paginas/finanzas/ResumenDeResultado'))
+const Asistencias = lazy(() => import('./paginas/metas/Asistencias'));
 
 function App() {
   return (
@@ -96,10 +98,12 @@ function App() {
                   <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                     <Route path='/finanzas_facturas' element={<Facturas/>} />
                     <Route path='/historial_facturas' element={<HistorialFacturas/>} />
+                    <Route path='/resumen_de_resultado' element={<ResumenDeResultado/>} />
                   </Route>
                   <Route element={<ProtectedRoute />}>
                     <Route path='/cargar_media' element={<CargarMedia/>} />
                     <Route path='/editar_metas' element={<EditarMetas/>}/>
+                    <Route path='/asistencias' element={<Asistencias/>}/>
                   </Route>
                 </Route>
                 <Route path='/auth' element={<AuthLayout />}>

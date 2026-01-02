@@ -33,6 +33,7 @@ import mediaRoutes from './routes/mediaRoutes.js';
 import notasRoutes from './routes/notasRoutes.js'
 import notasTurnosRoutes from './routes/notasTurnosRoutes.js'
 import resumenArRoutes from './routes/resumenArRoutes.js';
+import resumenResultadoRoutes from './routes/resumenResultadoRoutes.js'
 
 const app = express();
 app.use(express.json());
@@ -104,6 +105,7 @@ app.use('/api/reportes', reportesEnviadosRoutes)
 app.use('/api/reportes', reporteResumenRoutes)
 app.use('/api/reportes', resumenArRoutes)
 app.use('/api/reportes', trabajosSinMovimientosRoutes)
+app.use('/api/reportes', resumenResultadoRoutes)
 /* Reportes de Facturacion */
 app.use('/api/reportes', facturacionRoutes)
 /* Rutas para mermas */

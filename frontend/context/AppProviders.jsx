@@ -23,6 +23,8 @@ import { RecubrimientoEstacionProvider } from "./estacion/RecubrimientoEstacionP
 import { BiseladoEstacionLAProvider } from "./estacionLA/BiseladoEstacionLAContext";
 import { GeneradoEstacionLAProvider } from "./estacionLA/GeneradoEstacionLAContext";
 import { PulidoEstacionLAProvider } from "./estacionLA/PulidoEstacionLAContext";
+import { FracttalProvider } from "./fracttal/FracttalProvider";
+import { ResumenResultadosProvider } from "./reportes/ResumenResultadosProvider";
 
 const AppProviders = ({ children }) => {
   return (
@@ -50,7 +52,11 @@ const AppProviders = ({ children }) => {
                                               <BiseladoEstacionLAProvider>
                                                 <GeneradoEstacionLAProvider>
                                                   <PulidoEstacionLAProvider>
-                                                    {children}
+                                                    <ResumenResultadosProvider>
+                                                      <FracttalProvider>
+                                                        {children}
+                                                      </FracttalProvider>
+                                                    </ResumenResultadosProvider>
                                                   </PulidoEstacionLAProvider>
                                                 </GeneradoEstacionLAProvider>
                                               </BiseladoEstacionLAProvider>
