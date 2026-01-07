@@ -4,7 +4,7 @@ import Antiguedad from '../models/ReporteAntiguedad.js';
 
 const obtenerDatosAntiguedad = async (req, res) => {
     try {
-        const { mes } = req.params;
+        const { mes, anio } = req.params;
         
         const registros = await Antiguedad.findAll({
             where: {
@@ -12,6 +12,10 @@ const obtenerDatosAntiguedad = async (req, res) => {
                     Sequelize.where(
                         Sequelize.fn('MONTH', Sequelize.col('today')), 
                         mes
+                    ),
+                    Sequelize.where(
+                        Sequelize.fn('YEAR', Sequelize.col('today')), 
+                        anio
                     )
                 ]
             },
