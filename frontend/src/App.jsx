@@ -50,6 +50,7 @@ const Pruebas = lazy(() => import('./paginas/Pruebas'));
 const ResumenArTrabajos = lazy(() => import('./paginas/reportes/ResumenArTrabajos'));
 const ResumenDeResultado = lazy(() => import('./paginas/finanzas/ResumenDeResultado'))
 const Asistencias = lazy(() => import('./paginas/metas/Asistencias'));
+const PorcentajeDeCumplimiento = lazy(() => import('./paginas/metas/PorcentajeDeCumplimiento'));
 
 function App() {
   return (
@@ -99,6 +100,7 @@ function App() {
                     <Route path='/finanzas_facturas' element={<Facturas/>} />
                     <Route path='/historial_facturas' element={<HistorialFacturas/>} />
                     <Route path='/resumen_de_resultado' element={<ResumenDeResultado/>} />
+                    <Route path='/porcentaje_de_cumplimiento' element={<PorcentajeDeCumplimiento/>}/>
                   </Route>
                   <Route element={<ProtectedRoute />}>
                     <Route path='/cargar_media' element={<CargarMedia/>} />

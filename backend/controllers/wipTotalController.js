@@ -85,8 +85,8 @@ const obtenerWipTotalPorRango = async (req, res) => {
     const { anioInicio, mesInicio, diaInicio, anioFin, mesFin, diaFin } = req.params;
     try {
         // Crear fechas de inicio y fin en formato 'YYYY-MM-DD'
-        const fechaInicio = moment.tz(`${anioInicio}-${mesInicio}-${diaInicio}`, 'America/Mexico_City').startOf('day').toDate();
-        const fechaFin = moment.tz(`${anioFin}-${mesFin}-${diaFin}`, 'America/Mexico_City').endOf('day').toDate();
+        const fechaInicio = moment(`${anioInicio}-${mesInicio}-${diaInicio}`).startOf('day').toDate();
+        const fechaFin = moment(`${anioFin}-${mesFin}-${diaFin}`).endOf('day').toDate();
 
         // Buscar registros en el rango
         const registros = await WipTotal.findAll({
@@ -105,7 +105,7 @@ const obtenerWipTotalPorRango = async (req, res) => {
         // Formatear fechas
         const registrosFormateados = registros.map(registro => ({
             ...registro.toJSON(),
-            fecha: moment(registro.fecha).tz('America/Mexico_City').format('YYYY-MM-DD')
+            fecha: moment(registro.fecha).format('YYYY-MM-DD')
         }));
 
         res.json({ registros: registrosFormateados });

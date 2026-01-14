@@ -1,5 +1,5 @@
 import ResumenResultado from "../models/ResumenResultado.js"
-import { Op } from 'sequelize';
+import { Op, where } from 'sequelize';
 
 const obtenerResumenResultados = async (req, res) => {
     try {
@@ -145,9 +145,93 @@ const actualizarMetasDiarias = async (req, res) => {
     }
 };
 
+const obtenerPorcentajesMensuales = async (req, res) => {
+    try {
+        const { anio } = req.params;
+
+        if(!anio) {
+            return res.status(400).json({ error: "El año es requerido" });
+        }
+
+        //Obtener todos los registros del año
+        const registros = await ResumenResultado.findAll({
+            where: {
+                diario: {
+                    [Op.between]: [`${anio}-01-01`, `${anio}-12-31`]
+                }
+            },
+            order: [['diario', 'ASC']]
+        })
+
+        //Agrupar por mes
+        const datosPorMes = {};
+
+        registros.forEach(registro => {
+            const fechaString = registro.diario; // "2026-01-31"
+            const [anioStr, mesStr, diaStr] = fechaString.split('-');
+            const mes = parseInt(mesStr, 10); // 1, 2, 3... 12
+            
+            // Crear fecha correctamente para obtener el nombre del mes
+            const fecha = new Date(`${fechaString}T00:00:00`);
+            const nombreMes = fecha.toLocaleDateString('es-MX', { month: 'long'});
+            const mesKey = `${anio}-${String(mes).padStart(2, '0')}`;
+
+            if (!datosPorMes[mesKey]) {
+                datosPorMes[mesKey] = {
+                    mes: mes,
+                    nombreMes: nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1),
+                    anio: anio,
+                    metaSF: 0,
+                    metaF: 0,
+                    realSF: 0,
+                    realF: 0,
+                    metaTotal: 0,
+                    realTotal: 0,
+                    porcentaje: 0,
+                    registros: 0 
+                }
+            }
+
+            // Sumar las metas y real (considerando null como 0)
+            datosPorMes[mesKey].metaSF += registro.meta_sf || 0;
+            datosPorMes[mesKey].metaF += registro.meta_f || 0;
+            datosPorMes[mesKey].realSF += registro.real_sf || 0;
+            datosPorMes[mesKey].realF += registro.real_f || 0;
+            datosPorMes[mesKey].registros++; 
+        })
+
+        // Calcular totales y porcentajes
+        const resultado = Object.values(datosPorMes).map(mes => {
+            mes.metaTotal = mes.metaSF + mes.metaF;
+            mes.realTotal = mes.realSF + mes.realF;
+
+            // Calcular porcentaje
+            if(mes.metaTotal > 0) {
+                mes.porcentaje = ((mes.realTotal / mes.metaTotal) * 100).toFixed(2);
+            } else {
+                mes.porcentaje = 0;
+            }
+
+            // Calcular diferencia
+            mes.diferencia = mes.realTotal - mes.metaTotal;
+
+            return mes;
+        })
+
+        //Ordenar por mes
+        resultado.sort((a, b) => a.mes - b.mes);
+
+        res.json(resultado);
+    } catch (error) {
+        console.error("Error al obtener los porcentajes mensuales:", error);
+        res.status(500).json({ error: "Error al obtener los porcentajes mensuales" });
+    }
+}
+
 export { 
     obtenerResumenResultados,
     obtenerTodosLosRegistros,
     actualizarAsistencias,
-    actualizarMetasDiarias
+    actualizarMetasDiarias,
+    obtenerPorcentajesMensuales
 }
