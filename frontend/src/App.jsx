@@ -51,6 +51,8 @@ const ResumenArTrabajos = lazy(() => import('./paginas/reportes/ResumenArTrabajo
 const ResumenDeResultado = lazy(() => import('./paginas/finanzas/ResumenDeResultado'))
 const Asistencias = lazy(() => import('./paginas/metas/Asistencias'));
 const PorcentajeDeCumplimiento = lazy(() => import('./paginas/metas/PorcentajeDeCumplimiento'));
+const Defcon = lazy(() => import('./paginas/fracttal/Defcon'))
+const ReporteWipOperacionResumen = lazy(() => import('./paginas/reportes/ReporteWipOperacionResumen'))
 
 function App() {
   return (
@@ -93,14 +95,16 @@ function App() {
                   <Route path='/reportes_ar_resumen_trabajos' element={<ResumenArTrabajos/>} />
                   <Route path='/reportes_trabajos_sin_movimientos' element={<ReporteTrabajosSinMovimientos/>} />
                   <Route path='/reportes_de_flujo' element={<ReporteDeFlujo/>} />
+                  <Route path='/reportes_wip_operacion_resumen' element={<ReporteWipOperacionResumen/>} />
                   <Route path='/mermas_por_hora' element={<MermaPorHora/>} />
                   <Route path='/fracttal_procesos' element={<FracttalProcesos/>} />
+                  <Route path='/fracttal_defcon' element={<Defcon/>} />
                   <Route path='/pruebas' element={<Pruebas/>} />
+                  <Route path='/porcentaje_de_cumplimiento' element={<PorcentajeDeCumplimiento/>}/>
                   <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                     <Route path='/finanzas_facturas' element={<Facturas/>} />
                     <Route path='/historial_facturas' element={<HistorialFacturas/>} />
                     <Route path='/resumen_de_resultado' element={<ResumenDeResultado/>} />
-                    <Route path='/porcentaje_de_cumplimiento' element={<PorcentajeDeCumplimiento/>}/>
                   </Route>
                   <Route element={<ProtectedRoute />}>
                     <Route path='/cargar_media' element={<CargarMedia/>} />

@@ -34,6 +34,9 @@ import notasRoutes from './routes/notasRoutes.js'
 import notasTurnosRoutes from './routes/notasTurnosRoutes.js'
 import resumenArRoutes from './routes/resumenArRoutes.js';
 import resumenResultadoRoutes from './routes/resumenResultadoRoutes.js'
+import defconRoutes from './routes/fracttal/defconRoutes.js';
+import wipOperacionResumenRoutes from './routes/wipOperacionResumenRoutes.js';
+
 
 const app = express();
 app.use(express.json());
@@ -48,7 +51,7 @@ if (!fs.existsSync(uploadsDir)) {
 }
 app.use('/uploads', express.static('uploads'));
 
-// Conexion a la base de datos 
+// Conexion a la base de datos
 try {
     await db.authenticate();
     db.sync()
@@ -64,9 +67,9 @@ const corsOptions = {
     // Si no hay origin (por ejemplo, en requests desde herramientas como Postman),
     // se permite la petición.
     if (!origin) return callback(null, true);
-    
+
     console.log('Origin de la petición:', origin);
-    
+
     if (whitelist.includes(origin)) {
       callback(null, true);
     } else {
@@ -106,6 +109,7 @@ app.use('/api/reportes', reporteResumenRoutes)
 app.use('/api/reportes', resumenArRoutes)
 app.use('/api/reportes', trabajosSinMovimientosRoutes)
 app.use('/api/reportes', resumenResultadoRoutes)
+app.use('/api/reportes', wipOperacionResumenRoutes)
 /* Reportes de Facturacion */
 app.use('/api/reportes', facturacionRoutes)
 /* Rutas para mermas */
@@ -115,6 +119,8 @@ app.use('/api/media', mediaRoutes);
 /* Rutas para notas */
 app.use('/api/notas', notasRoutes);
 app.use('/api/notas', notasTurnosRoutes);
+/* Fracttal */
+app.use('/api/defcon', defconRoutes);
 
 const PORT = process.env.PORT || 3000;
 const servidor = app.listen(PORT, () => {

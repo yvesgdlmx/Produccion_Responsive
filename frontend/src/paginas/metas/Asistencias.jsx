@@ -26,7 +26,7 @@ const Asistencias = () => {
         const mesFecha = `${fechaObj.getFullYear()}-${String(fechaObj.getMonth() + 1).padStart(2, '0')}`;
         return mesFecha === mesSeleccionado;
       }).sort((a, b) => new Date(a.diario) - new Date(b.diario));
-      
+
       const asistenciasIniciales = {};
       diasDelMes.forEach(dia => {
         asistenciasIniciales[dia.id] = {
@@ -36,14 +36,14 @@ const Asistencias = () => {
           asistencia_vesp: dia.asistenciaVesp || 0,
         };
       });
-      
+
       setAsistenciasPorDia(asistenciasIniciales);
     }
   }, [mesSeleccionado, datos]);
 
   // Obtener fechas únicas
   const todasLasFechas = [...new Set(datos.map(item => item.diario))].sort();
-  
+
   // Obtener meses únicos disponibles
   const mesesDisponibles = [...new Set(todasLasFechas.map(fecha => {
     const fechaObj = new Date(fecha + 'T00:00:00');
@@ -53,7 +53,7 @@ const Asistencias = () => {
   // Obtener días del mes seleccionado
   const obtenerDiasDelMes = () => {
     if (!mesSeleccionado) return [];
-    
+
     return datos.filter(item => {
       const fechaObj = new Date(item.diario + 'T00:00:00');
       const mesFecha = `${fechaObj.getFullYear()}-${String(fechaObj.getMonth() + 1).padStart(2, '0')}`;
@@ -77,7 +77,7 @@ const Asistencias = () => {
   // Guardar todas las asistencias del mes
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (Object.keys(asistenciasPorDia).length === 0) {
       return;
     }
@@ -95,7 +95,7 @@ const Asistencias = () => {
     console.log('📤 Payload enviado al backend:', payload);
 
     const exito = await actualizarAsistencias(payload);
-    
+
     setGuardando(false);
   };
 
@@ -117,7 +117,7 @@ const Asistencias = () => {
   const formatearFecha = (fecha) => {
     if (!fecha) return '';
     const fechaObj = new Date(fecha + 'T00:00:00');
-    return fechaObj.toLocaleDateString('es-MX', { 
+    return fechaObj.toLocaleDateString('es-MX', {
       weekday: 'long',
       day: 'numeric',
       month: 'long'
@@ -159,7 +159,7 @@ const Asistencias = () => {
 
       {/* Contenedor principal */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200">
-        
+
         {/* Selector de Mes */}
         <div className="p-6 space-y-6">
           <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border border-indigo-200">
@@ -170,7 +170,7 @@ const Asistencias = () => {
             <select
               value={mesSeleccionado}
               onChange={(e) => setMesSeleccionado(e.target.value)}
-              className="w-full px-4 py-3 border border-indigo-300 rounded-lg focus:ring-2 
+              className="w-full px-4 py-3 border border-indigo-300 rounded-lg focus:ring-2
                        focus:ring-indigo-500 focus:border-indigo-500 text-gray-700 font-medium
                        bg-white"
             >
@@ -206,11 +206,11 @@ const Asistencias = () => {
                           asistencia_mat: 0,
                           asistencia_vesp: 0,
                         };
-                        
+
                         const esCompleto = tieneAsistenciasCompletas(dia);
 
                         return (
-                          <tr 
+                          <tr
                             key={dia.id}
                             className={`border-t hover:bg-blue-50 transition-colors ${
                               index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
@@ -239,8 +239,8 @@ const Asistencias = () => {
                                 min="0"
                                 value={asistenciasActuales.asistencia_nocturno}
                                 onChange={(e) => handleAsistenciaChange(dia.id, 'asistencia_nocturno', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                         text-center focus:ring-2 focus:ring-blue-500 
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg
+                                         text-center focus:ring-2 focus:ring-blue-500
                                          focus:border-blue-500 font-semibold text-gray-700
                                          hover:border-blue-400 transition-colors"
                                 placeholder="0"
@@ -253,8 +253,8 @@ const Asistencias = () => {
                                 min="0"
                                 value={asistenciasActuales.asistencia_mat}
                                 onChange={(e) => handleAsistenciaChange(dia.id, 'asistencia_mat', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                         text-center focus:ring-2 focus:ring-blue-500 
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg
+                                         text-center focus:ring-2 focus:ring-blue-500
                                          focus:border-blue-500 font-semibold text-gray-700
                                          hover:border-blue-400 transition-colors"
                                 placeholder="0"
@@ -267,8 +267,8 @@ const Asistencias = () => {
                                 min="0"
                                 value={asistenciasActuales.asistencia_vesp}
                                 onChange={(e) => handleAsistenciaChange(dia.id, 'asistencia_vesp', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                                         text-center focus:ring-2 focus:ring-blue-500 
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg
+                                         text-center focus:ring-2 focus:ring-blue-500
                                          focus:border-blue-500 font-semibold text-gray-700
                                          hover:border-blue-400 transition-colors"
                                 placeholder="0"
@@ -301,11 +301,11 @@ const Asistencias = () => {
                     asistencia_mat: 0,
                     asistencia_vesp: 0,
                   };
-                  
+
                   const esCompleto = tieneAsistenciasCompletas(dia);
 
                   return (
-                    <div 
+                    <div
                       key={dia.id}
                       className="bg-white border-2 border-gray-200 rounded-xl shadow-md overflow-hidden"
                     >
@@ -336,8 +336,8 @@ const Asistencias = () => {
                             min="0"
                             value={asistenciasActuales.asistencia_nocturno}
                             onChange={(e) => handleAsistenciaChange(dia.id, 'asistencia_nocturno', e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg 
-                                     text-center focus:ring-2 focus:ring-blue-500 
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
+                                     text-center focus:ring-2 focus:ring-blue-500
                                      focus:border-blue-500 font-bold text-gray-700 text-lg
                                      hover:border-blue-400 transition-colors"
                             placeholder="0"
@@ -354,8 +354,8 @@ const Asistencias = () => {
                             min="0"
                             value={asistenciasActuales.asistencia_mat}
                             onChange={(e) => handleAsistenciaChange(dia.id, 'asistencia_mat', e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg 
-                                     text-center focus:ring-2 focus:ring-blue-500 
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
+                                     text-center focus:ring-2 focus:ring-blue-500
                                      focus:border-blue-500 font-bold text-gray-700 text-lg
                                      hover:border-blue-400 transition-colors"
                             placeholder="0"
@@ -372,8 +372,8 @@ const Asistencias = () => {
                             min="0"
                             value={asistenciasActuales.asistencia_vesp}
                             onChange={(e) => handleAsistenciaChange(dia.id, 'asistencia_vesp', e.target.value)}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg 
-                                     text-center focus:ring-2 focus:ring-blue-500 
+                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
+                                     text-center focus:ring-2 focus:ring-blue-500
                                      focus:border-blue-500 font-bold text-gray-700 text-lg
                                      hover:border-blue-400 transition-colors"
                             placeholder="0"
@@ -433,7 +433,7 @@ const Asistencias = () => {
               </span>
             )}
           </div>
-          
+
           <button
             onClick={handleSubmit}
             disabled={guardando || !mesSeleccionado || diasDelMes.length === 0}

@@ -4,17 +4,17 @@ import useAuth from "../../../../hooks/useAuth";
 
 const MobileMenuWhite = ({ closeMobileMenu }) => {
   const { auth, cerrarSesionAuth } = useAuth();
-  
+
   const handleLogout = () => {
     cerrarSesionAuth();
     localStorage.removeItem("token");
     closeMobileMenu();
   };
-  
+
   const handleClick = () => {
     closeMobileMenu();
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-end transition-opacity duration-300">
       <div className="bg-white w-80 h-full shadow-lg overflow-y-auto transform transition-transform duration-300 ease-in-out">
@@ -301,6 +301,24 @@ const MobileMenuWhite = ({ closeMobileMenu }) => {
                     className="block py-2 px-3 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     Reporte de flujo
+                  </Link>
+                </li>
+                 <li>
+                  <Link
+                    to={"/porcentaje_de_cumplimiento"}
+                    onClick={handleClick}
+                    className="block py-2 px-3 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    Porcentaje de cumplimiento
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to={"/reportes_wip_operacion_resumen"}
+                    onClick={handleClick}
+                    className="block py-2 px-3 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    Resumen WIP operación
                   </Link>
                 </li>
               </ul>
