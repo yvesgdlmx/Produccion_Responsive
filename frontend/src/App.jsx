@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+﻿import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Layout from './layouts/Layout';
 import ScrollToTop from './components/others/ScrollToTop';
@@ -7,7 +7,7 @@ import AppProviders from '../context/AppProviders';
 import AuthLayout from './layouts/AuthLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Usar React.lazy para cargar componentes de forma asíncrona
+// Usar React.lazy para cargar componentes de forma asÃ­ncrona
 const Login = lazy(() => import('./components/others/Login'));
 const Procesos = lazy(() => import('./paginas/Procesos'));
 const ProcesosLA = lazy(() => import('./paginas/ProcesosLA'))
@@ -54,6 +54,7 @@ const Asistencias = lazy(() => import('./paginas/metas/Asistencias'));
 const PorcentajeDeCumplimiento = lazy(() => import('./paginas/metas/PorcentajeDeCumplimiento'));
 const Defcon = lazy(() => import('./paginas/fracttal/Defcon'))
 const ReporteWipOperacionResumen = lazy(() => import('./paginas/reportes/ReporteWipOperacionResumen'))
+const ReporteWipOperacionResumenNvi = lazy(() => import('./paginas/reportes/ReporteWipOperacionResumenNvi'))
 
 function App() {
   return (
@@ -98,6 +99,7 @@ function App() {
                   <Route path='/reportes_trabajos_sin_movimientos' element={<ReporteTrabajosSinMovimientos/>} />
                   <Route path='/reportes_de_flujo' element={<ReporteDeFlujo/>} />
                   <Route path='/reportes_wip_operacion_resumen' element={<ReporteWipOperacionResumen/>} />
+                  <Route path='/reportes_wip_operacion_resumen_nvi' element={<ReporteWipOperacionResumenNvi/>} />
                   <Route path='/mermas_por_hora' element={<MermaPorHora/>} />
                   <Route path='/fracttal_procesos' element={<FracttalProcesos/>} />
                   <Route path='/fracttal_defcon' element={<Defcon/>} />
@@ -126,3 +128,4 @@ function App() {
 }
 
 export default App;
+

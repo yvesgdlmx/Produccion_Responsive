@@ -37,6 +37,7 @@ import resumenResultadoRoutes from './routes/resumenResultadoRoutes.js'
 import defconRoutes from './routes/fracttal/defconRoutes.js';
 import wipOperacionResumenRoutes from './routes/wipOperacionResumenRoutes.js';
 import resumenTrabajosInkRoutes from './routes/resumenTrabajosInkRoutes.js';
+import wipOperacionResumenNviRoutes from './routes/wipOperacionResumenNviRoutes.js';
 
 
 const app = express();
@@ -112,6 +113,7 @@ app.use('/api/reportes', resumenTrabajosInkRoutes)
 app.use('/api/reportes', trabajosSinMovimientosRoutes)
 app.use('/api/reportes', resumenResultadoRoutes)
 app.use('/api/reportes', wipOperacionResumenRoutes)
+app.use('/api/reportes', wipOperacionResumenNviRoutes)
 /* Reportes de Facturacion */
 app.use('/api/reportes', facturacionRoutes)
 /* Rutas para mermas */
