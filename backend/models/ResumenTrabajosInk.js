@@ -11,6 +11,11 @@ const ResumenTrabajosInk = db.define("resumen_trabajos_ink", {
         type: DataTypes.DATEONLY,
         allowNull: false
     },
+    ink_en_proceso: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
     sin_surtir: {
         type: DataTypes.INTEGER,
         allowNull: false,
