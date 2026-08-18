@@ -153,8 +153,7 @@ const obtenerRegistrosJobCompleteSemana = async (req, res) => {
     const ahora = moment().tz('America/Mexico_City');
 
     // Calcular el sábado 22:00 de la semana correspondiente
-    const sabadoEstaSemana = ahora.clone().startOf('week').add(6, 'days'); // sábado 00:00
-    const sabadoEstaSemana22 = sabadoEstaSemana.clone().add(22, 'hours'); // sábado 22:00
+    const sabadoEstaSemana22 = ahora.clone().day(6).hour(22).minute(0).second(0).millisecond(0); // sábado 22:00
 
     let inicioSemana;
     if (ahora.isBefore(sabadoEstaSemana22)) {
@@ -163,6 +162,7 @@ const obtenerRegistrosJobCompleteSemana = async (req, res) => {
       inicioSemana = sabadoEstaSemana22;
     }
     const finSemana = inicioSemana.clone().add(7, 'days').subtract(1, 'seconds'); // siguiente sábado 21:59:59
+    const finVentanaExcluida = inicioSemana.clone().add(1, 'day').hour(14).minute(30).second(0).millisecond(0); // domingo 14:30
 
     // Construir literal que concatena fecha + hour (usa COALESCE para manejar nulls)
     const datetimeLiteral = Sequelize.literal("CAST(CONCAT(fecha, ' ', COALESCE(hour, '00:00:00')) AS DATETIME)");
@@ -170,15 +170,23 @@ const obtenerRegistrosJobCompleteSemana = async (req, res) => {
     const registros = await Manual.findAll({
       where: {
         name: { [Op.like]: "32 JOB COMPLETE%" },
-        [Op.and]: Sequelize.where(
-          datetimeLiteral,
+        [Op.and]: [
+          Sequelize.where(
+            datetimeLiteral,
+            {
+              [Op.between]: [
+                inicioSemana.format('YYYY-MM-DD HH:mm:ss'),
+                finSemana.format('YYYY-MM-DD HH:mm:ss')
+              ]
+            }
+          ),
           {
-            [Op.between]: [
-              inicioSemana.format('YYYY-MM-DD HH:mm:ss'),
-              finSemana.format('YYYY-MM-DD HH:mm:ss')
+            [Op.or]: [
+              Sequelize.where(datetimeLiteral, { [Op.lte]: inicioSemana.format('YYYY-MM-DD HH:mm:ss') }),
+              Sequelize.where(datetimeLiteral, { [Op.gt]: finVentanaExcluida.format('YYYY-MM-DD HH:mm:ss') })
             ]
           }
-        )
+        ]
       },
       order: [['fecha', 'ASC']]
     });
