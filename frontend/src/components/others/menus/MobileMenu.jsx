@@ -136,6 +136,7 @@ const MobileMenu = ({
                   { to: "/reportes_antiguedad", label: "ANTIGÜEDAD DE TRABAJOS" },
                   { to: "/reportes_trabajos_nuevos", label: "TRABAJOS NUEVOS" },
                   { to: "/reportes_wip_diario", label: "WIP DIARIO" },
+                  { to: "/reportes_proyeccion_wip", label: "PROYECCIÓN WIP" },
                   { to: "/reportes_trabajos_enviados", label: "TRABAJOS ENVIADOS" },
                   { to: "/reportes_resumen_trabajo", label: "RESUMEN DE TRABAJOS" },
                   { to: "/reportes_resumen_trabajos_ink", label: "RESUMEN TRABAJOS INK" },

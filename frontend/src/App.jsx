@@ -1,5 +1,5 @@
 ﻿import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Layout from './layouts/Layout';
 import ScrollToTop from './components/others/ScrollToTop';
 import { AuthProvider } from '../context/AuthProvider';
@@ -41,6 +41,7 @@ const ResumenTrabajo = lazy(() => import('./paginas/reportes/ResumenTrabajo'));
 const ReporteDeFlujo = lazy(() => import('./paginas/reportes/ReporteDeFlujo'));
 const Facturas =  lazy(() => import('./paginas/finanzas/Facturas'));
 const HistorialFacturas = lazy(() => import('./paginas/finanzas/HistorialFacturas'))
+const ProyeccionWip = lazy(() => import('./paginas/reportes/ProyeccionWip'))
 const ReporteTrabajosSinMovimientos = lazy(() => import('./paginas/reportes/ReporteTrabajosSinMovimientos'));
 const MermaPorHora = lazy(() => import('./paginas/mermas/MermaPorHora'));
 const CargarMedia = lazy(() => import('./paginas/CargarMedia'));
@@ -92,6 +93,7 @@ function App() {
                   <Route path='/reportes_antiguedad' element={<ReporteAntiguedad />} />
                   <Route path='/reportes_trabajos_nuevos' element={<ReporteTrabajosNuevos />} />
                   <Route path='/reportes_wip_diario' element={<ReporteWipDiario />} />
+                  <Route path='/proyeccion_wip' element={<Navigate to='/reportes_proyeccion_wip' replace />} />
                   <Route path='/reportes_trabajos_enviados' element={<ReportesTrabajosEnviados />} />
                   <Route path='/reportes_resumen_trabajo' element={<ResumenTrabajo/>} />
                   <Route path='/reportes_resumen_trabajos_ink' element={<ResumenTrabajosInk/>} />
@@ -111,6 +113,7 @@ function App() {
                     <Route path='/resumen_de_resultado' element={<ResumenDeResultado/>} />
                   </Route>
                   <Route element={<ProtectedRoute />}>
+                    <Route path='/reportes_proyeccion_wip' element={<ProyeccionWip/>} />
                     <Route path='/cargar_media' element={<CargarMedia/>} />
                     <Route path='/editar_metas' element={<EditarMetas/>}/>
                     <Route path='/asistencias' element={<Asistencias/>}/>

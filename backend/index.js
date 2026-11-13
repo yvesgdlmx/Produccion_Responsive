@@ -38,6 +38,8 @@ import defconRoutes from './routes/fracttal/defconRoutes.js';
 import wipOperacionResumenRoutes from './routes/wipOperacionResumenRoutes.js';
 import resumenTrabajosInkRoutes from './routes/resumenTrabajosInkRoutes.js';
 import wipOperacionResumenNviRoutes from './routes/wipOperacionResumenNviRoutes.js';
+import wipProjectionRoutes from './routes/wipProjectionRoutes.js';
+import { startWipProjectionMonitor } from './services/wipProjectionService.js';
 
 
 const app = express();
@@ -56,7 +58,7 @@ app.use('/uploads', express.static('uploads'));
 // Conexion a la base de datos
 try {
     await db.authenticate();
-    db.sync()
+    await db.sync()
     console.log('Conexion Correcta a la base de datos');
 } catch (error) {
     console.log(error);
@@ -114,6 +116,7 @@ app.use('/api/reportes', trabajosSinMovimientosRoutes)
 app.use('/api/reportes', resumenResultadoRoutes)
 app.use('/api/reportes', wipOperacionResumenRoutes)
 app.use('/api/reportes', wipOperacionResumenNviRoutes)
+app.use('/api/reportes/proyeccion-wip', wipProjectionRoutes)
 /* Reportes de Facturacion */
 app.use('/api/reportes', facturacionRoutes)
 /* Rutas para mermas */
@@ -130,3 +133,4 @@ const PORT = process.env.PORT || 3000;
 const servidor = app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
+startWipProjectionMonitor();
