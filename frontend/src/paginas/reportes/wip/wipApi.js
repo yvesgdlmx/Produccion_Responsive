@@ -2,9 +2,10 @@ import clienteAxios from '../../../../config/clienteAxios';
 
 const base = '/reportes/proyeccion-wip';
 export async function wipApi(path, options = {}) {
+  const token = localStorage.getItem('token');
   const { data } = await clienteAxios({
     ...options, url: `${base}${path}`,
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}`, ...options.headers },
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers },
   });
   return data;
 }

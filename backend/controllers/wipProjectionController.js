@@ -31,7 +31,7 @@ export async function getPlanning(req, res) {
   try {
     const year = Number(req.params.year);
     if (!Number.isInteger(year) || year < 2020 || year > 2100) throw badRequest('Anio invalido');
-    const rows = await WipPlanDia.findAll({ where: { fecha: { [Op.between]: [`${year}-01-01`, `${year}-12-31`] } }, order: [['fecha', 'ASC']], raw: true });
+    const rows = await WipPlanDia.findAll({ attributes: planFields, where: { fecha: { [Op.between]: [`${year}-01-01`, `${year}-12-31`] } }, order: [['fecha', 'ASC']], raw: true });
     res.json({ year, rows, defaults: DEFAULT_PERCENTAGES, currentYear: Number(today().slice(0, 4)) });
   } catch (error) { sendError(res, error); }
 }
