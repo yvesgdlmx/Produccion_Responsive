@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import clienteAxios from "../../../config/clienteAxios";
 import moment from "moment-timezone";
+import { fixedHoras, hitsEnIntervalo } from "./intervalosTableros.js";
 // Se establece la zona horaria por defecto
 moment.tz.setDefault("America/Mexico_City");
 // Función para determinar la clave de meta según la hora (formato "HH:mm")
@@ -12,31 +13,6 @@ const getTurnoMetaKeyForTime = (timeStr) => {
   if (hour >= 6 && hour < 14) return "meta_matutino";
   if (hour >= 14 && hour < 22) return "meta_vespertino";
 };
-// Arreglo fijo con los intervalos en el orden requerido
-const fixedHoras = [
-  "20:30 - 21:30",
-  "19:30 - 20:30",
-  "18:30 - 19:30",
-  "17:30 - 18:30",
-  "16:30 - 17:30",
-  "15:30 - 16:30",
-  "14:30 - 15:30",
-  "13:30 - 14:30",
-  "12:30 - 13:30",
-  "11:30 - 12:30",
-  "10:30 - 11:30",
-  "09:30 - 10:30",
-  "08:30 - 09:30",
-  "07:30 - 08:30",
-  "06:30 - 07:30",
-  "05:00 - 06:00",
-  "04:00 - 05:00",
-  "03:00 - 04:00",
-  "01:00 - 02:00",
-  "00:00 - 01:00",
-  "23:00 - 00:00",
-  "22:00 - 23:00"
-];
 // Función que define el rango del turno: de 22:00 de un día a 21:30 del día siguiente
 const getShiftRange = () => {
   let shiftStart = moment().tz("America/Mexico_City").startOf("day").add(22, "hours");
@@ -45,20 +21,6 @@ const getShiftRange = () => {
   }
   const shiftEnd = shiftStart.clone().add(23, "hours").add(30, "minutes");
   return { shiftStart, shiftEnd };
-};
-// Función auxiliar para calcular la suma de hits en un intervalo dado
-const hitsEnIntervalo = (registros, inicioIntervalo, finIntervalo) => {
-  return registros
-    .filter((r) => {
-      const horaRegistro = moment(r.hour, "HH:mm:ss");
-      const startMoment = moment(inicioIntervalo, "HH:mm");
-      const endMoment = moment(finIntervalo, "HH:mm");
-      if (startMoment.isAfter(endMoment)) {
-        return horaRegistro.isSameOrAfter(startMoment) || horaRegistro.isBefore(endMoment);
-      }
-      return horaRegistro.isSameOrAfter(startMoment) && horaRegistro.isBefore(endMoment);
-    })
-    .reduce((acc, curr) => acc + parseInt(curr.hits || 0, 10), 0);
 };
 const Totales_Biselado2_Tableros = () => {
   // Estados locales
@@ -122,7 +84,7 @@ const Totales_Biselado2_Tableros = () => {
             "YYYY-MM-DD HH:mm:ss",
             "America/Mexico_City"
           );
-          return fechaHoraRegistro.isBetween(shiftStart, shiftEnd, null, "[)");
+          return fechaHoraRegistro.isBetween(shiftStart, shiftEnd, null, "[]");
         });
         // 4. Agrupar registros por máquina
         const agrupados = {};
@@ -211,15 +173,7 @@ const Totales_Biselado2_Tableros = () => {
                   </td>
                   {horasUnicas.map((intervalo, idx) => {
                     const [horaInicio, horaFin] = intervalo.split(" - ");
-                    const totalHits = registrosCelula.filter(r => {
-                      const hourMoment = moment(r.hour, "HH:mm:ss");
-                      const startMoment = moment(horaInicio, "HH:mm");
-                      const endMoment = moment(horaFin, "HH:mm");
-                      if (startMoment.isAfter(endMoment)) {
-                        return hourMoment.isSameOrAfter(startMoment) || hourMoment.isBefore(endMoment);
-                      }
-                      return hourMoment.isSameOrAfter(startMoment) && hourMoment.isBefore(endMoment);
-                    }).reduce((acc, curr) => acc + parseInt(curr.hits || 0, 10), 0);
+                    const totalHits = hitsEnIntervalo(registrosCelula, horaInicio, horaFin);
                     const turnoKeyCol = getTurnoMetaKeyForTime(horaInicio.trim());
                     const metaCol = metasPorMaquina[celula] ? metasPorMaquina[celula][turnoKeyCol] : 0;
                     const claseHits = totalHits >= metaCol ? "text-green-500" : "text-red-500";

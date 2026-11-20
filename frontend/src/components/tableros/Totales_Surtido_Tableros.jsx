@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import clienteAxios from "../../../config/clienteAxios";
 import moment from "moment-timezone";
+import { fixedHoras, hitsEnIntervalo } from "./intervalosTableros.js";
 // Establece la zona horaria por defecto
 moment.tz.setDefault("America/Mexico_City");
 // Función para determinar el turno (meta) a partir de una hora dada en formato "HH:mm"
@@ -28,31 +29,6 @@ const Totales_Surtido_Tableros = () => {
   const [dynamicHoras, setDynamicHoras] = useState([]);
   // Definir el orden de las máquinas de interés
   const ordenCelulas = ["19 LENS LOG", "20 LENS LOG"];
-  // Arreglo de intervalos fijos
-  const fixedHoras = [
-    "20:30 - 21:30",
-    "19:30 - 20:30",
-    "18:30 - 19:30",
-    "17:30 - 18:30",
-    "16:30 - 17:30",
-    "15:30 - 16:30",
-    "14:30 - 15:30",
-    "13:30 - 14:30",
-    "12:30 - 13:30",
-    "11:30 - 12:30",
-    "10:30 - 11:30",
-    "09:30 - 10:30",
-    "08:30 - 09:30",
-    "07:30 - 08:30",
-    "06:30 - 07:30",
-    "05:00 - 06:00",
-    "04:00 - 05:00",
-    "03:00 - 04:00",
-    "01:00 - 02:00",
-    "00:00 - 01:00",
-    "23:00 - 00:00",
-    "22:00 - 23:00"
-  ];
   
   // Función para obtener el inicio y fin del turno (22:00 a 21:30 del día siguiente)
   const getShiftRange = () => {
@@ -62,21 +38,6 @@ const Totales_Surtido_Tableros = () => {
     }
     const shiftEnd = shiftStart.clone().add(23, "hours").add(30, "minutes");
     return { shiftStart, shiftEnd };
-  };
-  // Función auxiliar para calcular la suma de hits dentro de un intervalo
-  const hitsEnIntervalo = (registros, inicioIntervalo, finIntervalo) => {
-    return registros
-      .filter((r) => {
-        const horaRegistro = moment(r.hour, "HH:mm:ss");
-        const startMoment = moment(inicioIntervalo, "HH:mm");
-        const endMoment = moment(finIntervalo, "HH:mm");
-        if (startMoment.isAfter(endMoment)) {
-          return horaRegistro.isSameOrAfter(startMoment) || horaRegistro.isBefore(endMoment);
-        } else {
-          return horaRegistro.isSameOrAfter(startMoment) && horaRegistro.isBefore(endMoment);
-        }
-      })
-      .reduce((acc, curr) => acc + parseInt(curr.hits || 0, 10), 0);
   };
   useEffect(() => {
     const cargarDatos = async () => {
@@ -106,7 +67,7 @@ const Totales_Surtido_Tableros = () => {
             "YYYY-MM-DD HH:mm:ss",
             "America/Mexico_City"
           );
-          return fechaHoraRegistro.isBetween(shiftStart, shiftEnd, null, "[)");
+          return fechaHoraRegistro.isBetween(shiftStart, shiftEnd, null, "[]");
         });
         // Agrupar registros por máquina y calcular totales acumulados
         const agrupados = {};

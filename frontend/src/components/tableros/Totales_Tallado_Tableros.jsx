@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import clienteAxios from "../../../config/clienteAxios";
 import moment from "moment-timezone";
+import { fixedHoras, hitsEnIntervalo } from "./intervalosTableros.js";
 // Establece la zona horaria por defecto
 moment.tz.setDefault("America/Mexico_City");
 const getTurnoMetaKeyForTime = (timeStr) => {
@@ -30,30 +31,6 @@ const Totales_Tallado_Tableros = () => {
         "225 SRFBLK 6",
         //"226 SRFBLK 7"
     ].map(n => n.trim().toUpperCase());
-    const fixedHoras = [
-        "20:30 - 21:30",
-        "19:30 - 20:30",
-        "18:30 - 19:30",
-        "17:30 - 18:30",
-        "16:30 - 17:30",
-        "15:30 - 16:30",
-        "14:30 - 15:30",
-        "13:30 - 14:30",
-        "12:30 - 13:30",
-        "11:30 - 12:30",
-        "10:30 - 11:30",
-        "09:30 - 10:30",
-        "08:30 - 09:30",
-        "07:30 - 08:30",
-        "06:30 - 07:30",
-        "05:00 - 06:00",
-        "04:00 - 05:00",
-        "03:00 - 04:00",
-        "01:00 - 02:00",
-        "00:00 - 01:00",
-        "23:00 - 00:00",
-        "22:00 - 23:00",
-    ];
     const getShiftRange = () => {
         let shiftStart = moment().tz("America/Mexico_City").startOf("day").add(22, "hours");
         if (moment().isBefore(shiftStart)) {
@@ -61,20 +38,6 @@ const Totales_Tallado_Tableros = () => {
         }
         const shiftEnd = shiftStart.clone().add(23, "hours").add(30, "minutes");
         return { shiftStart, shiftEnd };
-    };
-    const hitsEnIntervalo = (registros, inicioIntervalo, finIntervalo) => {
-        return registros
-            .filter((r) => {
-                const horaRegistro = moment(r.hour, "HH:mm:ss");
-                const startMoment = moment(inicioIntervalo, "HH:mm");
-                const endMoment = moment(finIntervalo, "HH:mm");
-                if (startMoment.isAfter(endMoment)) {
-                    return horaRegistro.isSameOrAfter(startMoment) || horaRegistro.isBefore(endMoment);
-                } else {
-                    return horaRegistro.isSameOrAfter(startMoment) && horaRegistro.isBefore(endMoment);
-                }
-            })
-            .reduce((acc, curr) => acc + parseInt(curr.hits || 0, 10), 0);
     };
     useEffect(() => {
         const cargarDatos = async () => {
@@ -108,7 +71,7 @@ const Totales_Tallado_Tableros = () => {
                         "YYYY-MM-DD HH:mm:ss",
                         "America/Mexico_City"
                     );
-                    return fechaHoraRegistro.isBetween(shiftStart, shiftEnd, null, "[)");
+                    return fechaHoraRegistro.isBetween(shiftStart, shiftEnd, null, "[]");
                 });
                 // Agrupar registros por máquina
                 const agrupados = registrosFiltrados.reduce((acc, registro) => {
